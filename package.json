@@ -1,0 +1,41 @@
+{
+  "name": "schedule-gantt",
+  "version": "1.4.3",
+  "description": "排期工具 - 甘特图视图桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "pack": "electron-builder --dir"
+  },
+  "author": "",
+  "license": "MIT",
+  "build": {
+    "appId": "com.schedule.gantt",
+    "productName": "排期工具",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "排期工具_${version}.exe"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "node_modules/**/*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}
