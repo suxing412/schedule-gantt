@@ -35,7 +35,7 @@ test('WorkBuddy serves discoverable AI tools without requiring a new port or exp
   assert.equal((await fetch(origin+'/',{method:'POST',body:'ignored'})).status,405);
 });
 
-test('single-port integration forwards only public RPC credentials, requires Bearer and preserves CAS revision', async t=>{
+test('single-port integration uses X-Schedule-Token despite platform Authorization and preserves CAS revision', async t=>{
   const calls=[];
   const upstream=await listen(t,http.createServer(async(req,res)=>{
     let body='';for await(const chunk of req)body+=chunk;
@@ -54,7 +54,7 @@ test('single-port integration forwards only public RPC credentials, requires Bea
   const denied=await fetch(origin+'/api/tools/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   assert.equal(denied.status,401);
   assert.equal(calls.length,1);
-  const response=await fetch(origin+'/api/tools/call',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload)});
+  const response=await fetch(origin+'/api/tools/call',{method:'POST',headers:{'Content-Type':'application/json','X-Schedule-Token':token,Authorization:'Bearer platform.jwt.signature'},body:JSON.stringify(payload)});
   assert.equal(response.status,200);
   const value=await response.json();assert.equal(value.ok,true);assert.equal(value.data.record.revision,2);
   assert.equal(calls.length,2);
@@ -62,4 +62,5 @@ test('single-port integration forwards only public RPC credentials, requires Bea
   assert.equal(calls[1].args.p_token,token);
   assert.deepEqual(calls[1].args.p_action,{name:'project.update',arguments:{patch:{title:'Changed'}}});
   assert.equal(calls[1].headers.authorization,undefined);
+  assert.equal(calls[1].headers['x-schedule-token'],undefined);
 });

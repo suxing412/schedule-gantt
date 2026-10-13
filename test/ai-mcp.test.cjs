@@ -22,6 +22,12 @@ const defs = [
 const catalog = { version: '2', tools: defs };
 const ok = data => ({ ok: true, data });
 const response = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers });
+function assertSessionHeader(call, authenticated = false) {
+  const headers = new Headers(call.headers);
+  assert.equal(headers.get('authorization'), null, 'MCP must not use the platform Authorization header');
+  assert.equal(headers.get('x-schedule-token'), authenticated ? token : null);
+  assert.equal(JSON.stringify([...headers]).includes(apiKey), false, 'AI keys belong only in the session exchange body');
+}
 function harness(handler, options = {}) {
   const calls = [];
   const adapter = createAdapter({
@@ -119,7 +125,8 @@ test('anonymous public reads never login and bind the configured board', async (
   assert.equal(calls.length, 2);
   assert.equal(calls[1].url, env.SCHEDULE_API_URL + '/api/tools/call');
   assert.deepEqual(calls[1].body, { name: 'project.get', arguments: {}, projectId: id });
-  assert.equal(calls[1].headers.Authorization, undefined);
+  calls.forEach(call => assertSessionHeader(call));
+  assert.equal(JSON.stringify(calls).includes(token), false);
   assert.equal(calls[1].redirect, 'error');
   const denied = await adapter.call('task.update', { id: 'task1', expectedRevision: 4 }).catch(error => error);
   assert.equal(denied.code, 'API_KEY_REQUIRED');
@@ -133,16 +140,32 @@ test('writes lazily authenticate, reuse token, and lift revision out of business
   await adapter.call('task.update', { id: 'task1', expectedRevision: 5 });
   assert.equal(calls.filter(c => c.url.endsWith('/sessions/external')).length, 1);
   assert.deepEqual(calls[1].body, { apiKey, displayName: 'AI助手' });
-  assert.equal(calls[1].headers.Authorization, undefined);
+  assertSessionHeader(calls[0]);
+  assertSessionHeader(calls[1]);
+  assert.equal(JSON.stringify(calls[1]).includes(token), false);
   assert.deepEqual(calls[2].body, { name: 'task.update', arguments: { id: 'task1' }, projectId: id, expectedRevision: 4 });
-  assert.equal(calls[2].headers.Authorization, 'Bearer ' + token);
+  assertSessionHeader(calls[2], true);
+  assertSessionHeader(calls[3], true);
+  assert.equal(JSON.stringify(calls[2].body).includes(token), false);
+  assert.equal(JSON.stringify(calls[2].body).includes(apiKey), false);
+});
+
+test('public reads omit the session token even after an authorized operation', async () => {
+  const { adapter, calls } = harness();
+  await adapter.call('presence.list', {});
+  await adapter.call('project.get', {});
+  assertSessionHeader(calls[2], true);
+  assertSessionHeader(calls[3]);
+  assert.equal(JSON.stringify(calls[3]).includes(token), false);
+  assert.equal(JSON.stringify(calls[3]).includes(apiKey), false);
 });
 
 test('authorized read and revision-free session tools authenticate without revision', async () => {
   const { adapter, calls } = harness();
   await adapter.call('presence.list', {});
   await adapter.call('session.revoke', {});
-  assert.equal(calls[2].headers.Authorization, 'Bearer ' + token);
+  assertSessionHeader(calls[2], true);
+  assertSessionHeader(calls[3], true);
   assert.equal(calls[2].body.expectedRevision, undefined);
   assert.equal(calls[3].body.expectedRevision, undefined);
 });
@@ -301,7 +324,7 @@ test('real child stdio process reaches a loopback HTTP API and keeps login secre
     req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => {
       const body = chunks.length ? JSON.parse(Buffer.concat(chunks)) : null;
-      seen.push({ url: req.url, authorization: req.headers.authorization, body });
+      seen.push({ url: req.url, headers: req.headers, body });
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(req.url === '/api/tools' ? catalog : req.url.endsWith('/sessions/external') ? ok(session) : ok(record)));
     });
@@ -339,8 +362,15 @@ test('real child stdio process reaches a loopback HTTP API and keeps login secre
   assert.equal(JSON.parse(data.result.content[0].text).data.revision, 4);
   assert.equal(JSON.stringify(data).includes(token), false);
   assert.equal(seen.length, 3);
-  assert.equal(seen[2].authorization, 'Bearer ' + token);
+  assertSessionHeader(seen[0]);
+  assertSessionHeader(seen[1]);
+  assert.equal(JSON.stringify(seen[1]).includes(token), false);
+  assertSessionHeader(seen[2], true);
   assert.equal(seen[2].body.expectedRevision, 4);
+  const publicRead = await send(request(2, 'tools/call', { name: 'project.get', arguments: {} }));
+  assert.equal(publicRead.result.isError, false);
+  assertSessionHeader(seen[3]);
+  assert.equal(JSON.stringify(seen[3]).includes(token), false);
   assert.equal(stderr, '');
   child.stdin.end();
 });

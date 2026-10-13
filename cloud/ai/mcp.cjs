@@ -101,7 +101,7 @@ function createAdapter({ env = process.env, fetchImpl = globalThis.fetch, now = 
         headers: {
           Accept: 'application/json',
           ...(serialized === undefined ? {} : { 'Content-Type': 'application/json' }),
-          ...(token ? { Authorization: 'Bearer ' + token } : {})
+          ...(token ? { 'X-Schedule-Token': token } : {})
         },
         ...(serialized === undefined ? {} : { body: serialized })
       });

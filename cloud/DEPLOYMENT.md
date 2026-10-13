@@ -82,7 +82,9 @@ npm start
 
 服务开放指定前端资源、健康检查和新工具路由，不通过 HTTP 提供 SQL、环境文件、测试、服务端源码或旧 Node API。云端 RPC 前缀 `/.cloud/` 须由平台保留；自建反向代理需把 `/api/`、`/llms.txt` 指向此 Node 服务，不能把它们回退成 SPA HTML。
 
-托管环境须支持 Node `worker_threads`：公开分析与预览在受限 Worker 中执行，不能被平台禁用。MCP 客户端通过 `node cloud/ai/mcp.cjs` 启动本地 stdio 适配器，网站不提供 `/mcp` HTTP 端点。HTTP 外部密钥交换把长密钥放在 JSON 的 `apiKey` 字段，随后使用返回的短期 `token` 作为 Bearer；长密钥不直接当 Bearer，也不放 URL。
+托管环境须支持 Node `worker_threads`：公开分析与预览在受限 Worker 中执行，不能被平台禁用。MCP 客户端通过 `node cloud/ai/mcp.cjs` 启动本地 stdio 适配器，网站不提供 `/mcp` HTTP 端点。
+
+HTTP 外部会话交换只在 JSON 正文的 `apiKey` 字段传长期 AI 密钥；后续授权请求使用 **`X-Schedule-Token: <token>`**，头值为返回的 64 位临时会话令牌。WorkBuddy 平台会覆盖 `Authorization` 请求头，因此 `/api/**` 转发必须保留 `X-Schedule-Token`。`Authorization: Bearer <token>` 仅保留本地直连 Node 服务的兼容性，不作为平台接入方式。长期密钥不能充当会话令牌，两者都不放 URL 或日志。
 
 默认只允许同源嵌入；第三方平台确需 iframe 预览时，将实际父页面 origin 填入 `WORKBUDDY_FRAME_ANCESTORS`，例如 `https://preview.example.com,https://console.example.com`，不要照抄示例或猜测平台域名。不允许通配符、路径、用户名或密码；开发环境才允许 HTTP loopback。也可直接使用独立发布网址验收。工具服务不开放任意跨站浏览器写入；外部 AI 使用服务端 HTTP 或本地 MCP 客户端。
 
@@ -99,7 +101,7 @@ npm start
 7. 停止并重启静态服务或换容器后，排期仍可读取。健康检查不能替代这项持久化测试。
 8. 新建排期返回一次性 AI 密钥；旧排期可用人工四位码生成密钥。普通公开读、导出及协作者列表不含密钥/令牌/摘要。
 9. 错误 AI 密钥不能换令牌；正确密钥换得 external 会话。外部动作必须拒绝人工会话，人工整份保存必须拒绝外部会话；两种凭据预算互不挤占。
-10. 从网站外部 GET 工具目录、公开项目和导出 JSON；用外部会话添加合成任务并读回。原子批量的一步非法时整批不改，预览不写入，同版本人机并发只成功一次。
+10. 从网站外部 GET 工具目录、公开项目和导出 JSON；通过 `X-Schedule-Token` 携带外部会话，经真实 WorkBuddy 网关添加合成任务并读回。原子批量的一步非法时整批不改，预览不写入，同版本人机并发只成功一次；本地兼容的 `Authorization` 测试不能替代平台验收。
 11. 人工重置 AI 密钥后旧密钥、旧 external 会话均拒绝操作，原人工会话仍可用。检查临近到期、跨排期及撤销后的会话。
 12. 协作者需有效会话才能查看；同名条目并列、来源正确、无任何令牌字段。编辑态每 20 秒心跳，隐藏/离开/退出后停止，60 秒后在线状态过期。
 13. 当前浏览器工具遵守编辑权限、表单占用与草稿保护；撤销重做只操作当前页历史。负责人高亮按去除首尾空白后的姓名精确匹配，完整显式上下游依赖高亮不包含父子层级；两种高亮可共存且不改变云端版本。

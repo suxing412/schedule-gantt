@@ -67,7 +67,7 @@ test('only documented API paths are handled; GET does not enumerate projects and
 
 test('GET forwards exact RPC and publishable key only; returned private metadata is discarded', async t => {
   const h = await harness(t, () => good({...record(), edit_code_hash: 'PRIVATE_HASH', apiKey: 'PRIVATE_KEY', session: session()}));
-  const result = await h.request('/api/projects/' + ID, undefined, {headers: {host: 'attacker.invalid', origin: 'https://attacker.invalid', authorization: 'Bearer ' + TOKEN}});
+  const result = await h.request('/api/projects/' + ID, undefined, {headers: {host: 'attacker.invalid', origin: 'https://attacker.invalid', 'X-Schedule-Token': TOKEN, authorization: 'Bearer platform.jwt.value'}});
   assert.equal(result.status, 200);
   assert.equal(result.data.data.id, ID);
   assert.ok(!result.text.includes('PRIVATE_')); assert.ok(!result.text.includes(TOKEN));
@@ -112,7 +112,7 @@ test('missing auth, missing revision, unknown names/args and invalid nested muta
 test('mutations send the original expected revision and action to trusted RPC exactly once', async t => {
   const h = await harness(t, () => good({...record(2), changed: true, results: [{index: 0, name: 'project.update', affectedIds: []}], privateKey: 'SECRET'}));
   const action = {name: 'project.update', arguments: {patch: {title: 'next'}}, projectId: ID, expectedRevision: 1};
-  const result = await h.request('/api/tools/call', action, {headers: {authorization: 'Bearer ' + TOKEN}});
+  const result = await h.request('/api/tools/call', action, {headers: {'X-Schedule-Token': TOKEN}});
   assert.equal(result.status, 200); assert.equal(result.data.data.record.revision, 2);
   assert.equal(result.data.data.changed, true); assert.equal(result.data.data.results.length, 1); assert.ok(!result.text.includes('SECRET'));
   assert.deepEqual(h.calls[0].body, {p_id: ID, p_token: TOKEN, p_expected_revision: 1, p_action: {name: action.name, arguments: action.arguments}});
@@ -121,7 +121,7 @@ test('mutations send the original expected revision and action to trusted RPC ex
 
 test('HTTP 200 business conflict becomes HTTP 409, preserves sanitized latest, and never retries', async t => {
   const h = await harness(t, () => bad('REVISION_CONFLICT', {latest: {...record(5), editCodeHash: 'PRIVATE_HASH', token: TOKEN}}));
-  const result = await h.request('/api/tools/call', {name: 'project.update', arguments: {patch: {title: 'next'}}, projectId: ID, expectedRevision: 1}, {headers: {authorization: 'Bearer ' + TOKEN}});
+  const result = await h.request('/api/tools/call', {name: 'project.update', arguments: {patch: {title: 'next'}}, projectId: ID, expectedRevision: 1}, {headers: {'X-Schedule-Token': TOKEN}});
   assert.equal(result.status, 409); assert.equal(result.data.latest.revision, 5);
   assert.ok(!result.text.includes('PRIVATE_')); assert.ok(!result.text.includes(TOKEN)); assert.equal(h.calls.length, 1);
 });
@@ -147,7 +147,7 @@ test('project.preview reads and applies canonical actions locally without a writ
 test('project.batch maps to one atomic action RPC and rejects nested or overlong batches', async t => {
   const h = await harness(t, () => good({...record(2), results: [], changed: true}));
   const operations = [{name: 'project.update', arguments: {patch: {title: '改名'}}}, {name: 'task.shift', arguments: {ids: ['t1'], days: 1}}];
-  const result = await h.request('/api/tools/call', {name: 'project.batch', arguments: {operations}, projectId: ID, expectedRevision: 1}, {headers: {authorization: 'Bearer ' + TOKEN}});
+  const result = await h.request('/api/tools/call', {name: 'project.batch', arguments: {operations}, projectId: ID, expectedRevision: 1}, {headers: {'X-Schedule-Token': TOKEN}});
   assert.equal(result.status, 200); assert.deepEqual(h.calls[0].body.p_action, {operations}); assert.equal(h.calls.length, 1);
   assert.equal((await h.call('project.preview', {operations: [{name: 'project.batch', arguments: {operations}}]})).status, 400);
   assert.equal((await h.call('project.preview', {operations: Array(101).fill(operations[0])})).status, 400);
@@ -166,18 +166,18 @@ test('presence requires a session even for reads; presence payload contains only
   const h = await harness(t, () => good(presence));
   assert.equal((await h.call('presence.list')).status, 401); assert.equal(h.calls.length, 0);
   for (const name of ['presence.list', 'presence.heartbeat']) {
-    const result = await h.request('/api/tools/call', {name, arguments: {}, projectId: ID}, {headers: {authorization: 'Bearer ' + TOKEN}});
+    const result = await h.request('/api/tools/call', {name, arguments: {}, projectId: ID}, {headers: {'X-Schedule-Token': TOKEN}});
     assert.equal(result.status, 200); assert.equal(result.data.data.members.length, 1);
     assert.ok(!result.text.includes(TOKEN)); assert.ok(!result.text.includes(KEY)); assert.equal(result.data.data.sessions, undefined);
   }
   assert.deepEqual(h.calls.map(c => c.url.split('/').pop()), ['schedule_list_presence', 'schedule_heartbeat']);
 });
 
-test('logout REST and session tool both revoke only the bearer session without requiring a revision', async t => {
+test('logout REST and session tool both revoke only the custom-header session without requiring a revision', async t => {
   const h = await harness(t, () => good({revoked: true, leaked: KEY}));
-  const first = await h.request('/api/projects/' + ID + '/session', undefined, {method: 'DELETE', headers: {authorization: 'Bearer ' + TOKEN}});
+  const first = await h.request('/api/projects/' + ID + '/session', undefined, {method: 'DELETE', headers: {'X-Schedule-Token': TOKEN}});
   assert.deepEqual(first.data.data, {revoked: true});
-  const second = await h.request('/api/tools/call', {name: 'session.revoke', arguments: {}, projectId: ID}, {headers: {authorization: 'Bearer ' + TOKEN}});
+  const second = await h.request('/api/tools/call', {name: 'session.revoke', arguments: {}, projectId: ID}, {headers: {'X-Schedule-Token': TOKEN}});
   assert.deepEqual(second.data.data, {revoked: true}); assert.equal(h.calls.length, 2);
   assert.deepEqual(h.calls[0].body, {p_id: ID, p_token: TOKEN});
 });
@@ -292,4 +292,64 @@ test('OpenAPI describes action record wrapper and validates UTF-16 length consis
   assert.deepEqual(spec.data.components.schemas.ActionResult.required, ['record', 'results', 'changed']);
   const nameTooLong = await h.request('/api/projects/' + ID + '/sessions/external', {apiKey: KEY, displayName: '😀'.repeat(33)});
   assert.equal(nameTooLong.status, 400); assert.equal(h.calls.length, 0);
+});
+
+
+test('raw 64-hex X-Schedule-Token authenticates and is passed only as the RPC token argument', async t => {
+  const h = await harness(t, () => good({members: [], onlineThresholdSeconds: 60}));
+  const result = await h.request('/api/tools/call', {name: 'presence.list', arguments: {}, projectId: ID}, {headers: {'X-Schedule-Token': TOKEN}});
+  assert.equal(result.status, 200); assert.equal(h.calls.length, 1);
+  assert.deepEqual(h.calls[0].body, {p_id: ID, p_token: TOKEN});
+  assert.deepEqual(h.calls[0].headers, {'content-type': 'application/json', accept: 'application/json', 'x-wb-webapp-access-key': 'wbpk_test'});
+  assert.ok(!result.text.includes(TOKEN));
+});
+
+test('custom session header takes precedence over the platform Authorization JWT', async t => {
+  const platformJwt = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwbGF0Zm9ybSJ9.c2lnbmF0dXJl';
+  const h = await harness(t, () => good({...record(2), changed: true, results: []}));
+  const result = await h.request('/api/tools/call', {name: 'project.update', arguments: {patch: {title: 'next'}}, projectId: ID, expectedRevision: 1}, {headers: {'X-Schedule-Token': TOKEN, Authorization: platformJwt}});
+  assert.equal(result.status, 200); assert.equal(h.calls.length, 1);
+  assert.equal(h.calls[0].body.p_token, TOKEN);
+  assert.ok(!JSON.stringify(h.calls[0]).includes(platformJwt));
+});
+
+test('invalid nonempty custom header never falls back to a valid legacy Bearer token', async t => {
+  const h = await harness(t, () => good({revoked: true}));
+  for (const invalid of ['not-a-token', 'Bearer ' + TOKEN.slice(1), TOKEN + ',' + KEY, 'Bearer platform.jwt.value']) {
+    const result = await h.request('/api/projects/' + ID + '/session', undefined, {method: 'DELETE', headers: {'X-Schedule-Token': invalid, Authorization: 'Bearer ' + TOKEN}});
+    assert.equal(result.status, 401); assert.equal(result.data.error.code, 'UNAUTHORIZED');
+    assert.ok(!result.text.includes(TOKEN));
+  }
+  assert.equal(h.calls.length, 0);
+});
+
+test('a rejected custom session cannot be replaced by a different valid Bearer session', async t => {
+  const rejectedToken = 'd'.repeat(64);
+  const h = await harness(t, call => call.body.p_token === TOKEN ? good({members: [], onlineThresholdSeconds: 60}) : bad('UNAUTHORIZED'));
+  const result = await h.request('/api/tools/call', {name: 'presence.list', arguments: {}, projectId: ID}, {headers: {'X-Schedule-Token': rejectedToken, Authorization: 'Bearer ' + TOKEN}});
+  assert.equal(result.status, 401); assert.equal(h.calls.length, 1);
+  assert.equal(h.calls[0].body.p_token, rejectedToken);
+});
+
+test('legacy Authorization Bearer remains compatible when the custom header is absent', async t => {
+  const h = await harness(t, () => good({revoked: true}));
+  const result = await h.request('/api/projects/' + ID + '/session', undefined, {method: 'DELETE', headers: {Authorization: 'Bearer ' + TOKEN}});
+  assert.equal(result.status, 200); assert.equal(h.calls.length, 1);
+  assert.deepEqual(h.calls[0].body, {p_id: ID, p_token: TOKEN});
+});
+
+test('OpenAPI advertises the actual custom session header rather than HTTP Bearer transport', async t => {
+  const h = await harness(t);
+  const result = await h.request('/api/openapi.json');
+  const schemes = result.data.components.securitySchemes;
+  const entry = Object.entries(schemes).find(([, scheme]) => scheme.name === 'X-Schedule-Token');
+  assert.ok(entry, 'X-Schedule-Token must be discoverable as a security scheme');
+  const [name, scheme] = entry;
+  assert.equal(scheme.type, 'apiKey'); assert.equal(scheme.in, 'header');
+  assert.equal(scheme.scheme, undefined);
+  assert.ok(result.data.paths['/api/projects/{id}/session'].delete.security.some(security => Object.hasOwn(security, name)));
+  assert.ok(result.data.paths['/api/tools/call'].post.security.some(security => Object.hasOwn(security, name)));
+  const help = await h.request('/llms.txt');
+  assert.match(help.text, /X-Schedule-Token/);
+  assert.equal(h.calls.length, 0);
 });
