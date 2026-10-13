@@ -1,0 +1,1319 @@
+{
+  "tasks": [
+    {
+      "id": "pipe_gameplay",
+      "name": "01 · Boss 玩法与战斗",
+      "pid": null,
+      "type": "pipeline",
+      "s": "2026-10-05",
+      "e": "2026-10-23",
+      "pct": 33,
+      "who": "林知行",
+      "grp": "",
+      "phase": "版本研发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "林知行",
+        "cf_effort": 142,
+        "cf_duration": 19,
+        "cf_acceptance": "2026-10-23",
+        "cf_accepted": false,
+        "cf_notes": "管线汇总下属任务的时间范围与进度；可折叠整个模块。"
+      }
+    },
+    {
+      "id": "design",
+      "name": "方案与原型",
+      "pid": "pipe_gameplay",
+      "type": "task",
+      "s": "2026-10-05",
+      "e": "2026-10-09",
+      "pct": 100,
+      "who": "林知行",
+      "grp": "策划",
+      "phase": "方案原型",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "林知行",
+        "cf_effort": 28,
+        "cf_duration": 5,
+        "cf_acceptance": "2026-10-09",
+        "cf_accepted": true,
+        "cf_notes": "展开查看子任务；父任务起止与进度由子项自动汇总。"
+      }
+    },
+    {
+      "id": "scope",
+      "name": "版本目标与验收标准",
+      "pid": "design",
+      "type": "task",
+      "s": "2026-10-05",
+      "e": "2026-10-06",
+      "pct": 100,
+      "who": "林知行",
+      "grp": "策划",
+      "phase": "方案原型",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "林知行",
+        "cf_effort": 12,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-06",
+        "cf_accepted": true,
+        "cf_notes": "目标：完成 8 分钟双阶段 Boss 战。\n验收：流程可通关、技能有预警、断线可恢复。"
+      }
+    },
+    {
+      "id": "prototype",
+      "name": "战斗白盒与节奏验证",
+      "pid": "design",
+      "type": "task",
+      "s": "2026-10-07",
+      "e": "2026-10-08",
+      "pct": 100,
+      "who": "周予安",
+      "grp": "技术策划",
+      "phase": "方案原型",
+      "deps": [
+        "scope"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "林知行",
+        "cf_effort": 16,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-08",
+        "cf_accepted": true,
+        "cf_notes": "顺序依赖示例：方案确定后进入白盒验证。"
+      }
+    },
+    {
+      "id": "prototype_gate",
+      "name": "原型评审通过",
+      "pid": "design",
+      "type": "milestone",
+      "s": "2026-10-09",
+      "e": "2026-10-09",
+      "pct": 0,
+      "who": "林知行",
+      "grp": "策划",
+      "phase": "方案原型",
+      "deps": [
+        "prototype"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "林知行",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-10-09",
+        "cf_accepted": true,
+        "cf_notes": "重要节点占任务行，可作为其他任务的前置。"
+      }
+    },
+    {
+      "id": "combat",
+      "name": "战斗系统",
+      "pid": "pipe_gameplay",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-23",
+      "pct": 23,
+      "who": "陈墨",
+      "grp": "程序",
+      "phase": "制作开发",
+      "deps": [
+        "prototype_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 114,
+        "cf_duration": 12,
+        "cf_acceptance": "2026-10-23",
+        "cf_accepted": false,
+        "cf_notes": "三级任务示例：战斗系统 → 技能逻辑 → 叶子任务，上面还有管线容器。"
+      }
+    },
+    {
+      "id": "skills",
+      "name": "技能逻辑",
+      "pid": "combat",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-20",
+      "pct": 26,
+      "who": "陈墨",
+      "grp": "程序",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 42,
+        "cf_duration": 9,
+        "cf_acceptance": "2026-10-20",
+        "cf_accepted": false,
+        "cf_notes": "子模块可独立折叠；在子任务上拖拽日期可观察父级范围变化。"
+      }
+    },
+    {
+      "id": "hit",
+      "name": "伤害与命中判定",
+      "pid": "skills",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-14",
+      "pct": 60,
+      "who": "陈墨",
+      "grp": "程序",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 20,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-10-14",
+        "cf_accepted": false,
+        "cf_notes": "进行中示例。拖动条形两端调整起止，拖动中段整体平移。"
+      }
+    },
+    {
+      "id": "combo",
+      "name": "连招与打断窗口",
+      "pid": "skills",
+      "type": "task",
+      "s": "2026-10-15",
+      "e": "2026-10-16",
+      "pct": 0,
+      "who": "周予安",
+      "grp": "技术策划",
+      "phase": "制作开发",
+      "deps": [
+        "hit"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 12,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-16",
+        "cf_accepted": false,
+        "cf_notes": "单前置依赖；可尝试 Ctrl 拖线建立或调整关系。"
+      }
+    },
+    {
+      "id": "skill_config",
+      "name": "技能配置与数值热更",
+      "pid": "skills",
+      "type": "task",
+      "s": "2026-10-19",
+      "e": "2026-10-20",
+      "pct": 0,
+      "who": "周予安",
+      "grp": "技术策划",
+      "phase": "制作开发",
+      "deps": [
+        "combo"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "陈墨",
+        "cf_effort": 10,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-20",
+        "cf_accepted": false,
+        "cf_notes": "与 AI 分支并行，最终在闭环节点汇合。"
+      }
+    },
+    {
+      "id": "ai",
+      "name": "Boss AI 与阶段切换",
+      "pid": "combat",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-22",
+      "pct": 35,
+      "who": "许星遥",
+      "grp": "程序",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 48,
+        "cf_duration": 11,
+        "cf_acceptance": "2026-10-22",
+        "cf_accepted": false,
+        "cf_notes": "长工期分支，用于观察关键路径高亮和父级加权进度。"
+      }
+    },
+    {
+      "id": "arena",
+      "name": "场地机关与触发器",
+      "pid": "combat",
+      "type": "task",
+      "s": "2026-10-15",
+      "e": "2026-10-21",
+      "pct": 0,
+      "who": "顾清禾",
+      "grp": "策划",
+      "phase": "制作开发",
+      "deps": [
+        "prototype_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "林知行",
+        "cf_effort": 24,
+        "cf_duration": 7,
+        "cf_acceptance": "2026-10-21",
+        "cf_accepted": false,
+        "cf_notes": "跨层级依赖原型评审；不依赖自身父任务，避免形成环。"
+      }
+    },
+    {
+      "id": "playable",
+      "name": "可玩闭环验收",
+      "pid": "combat",
+      "type": "milestone",
+      "s": "2026-10-23",
+      "e": "2026-10-23",
+      "pct": 0,
+      "who": "林知行",
+      "grp": "策划",
+      "phase": "联调验收",
+      "deps": [
+        "skill_config",
+        "ai",
+        "arena"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "林知行",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-10-23",
+        "cf_accepted": false,
+        "cf_notes": "三个并行分支汇合。可以双击节点查看全部前置。"
+      }
+    },
+    {
+      "id": "pipe_art",
+      "name": "02 · 角色资源与视听",
+      "pid": null,
+      "type": "pipeline",
+      "s": "2026-10-07",
+      "e": "2026-11-04",
+      "pct": 15,
+      "who": "沈初霁",
+      "grp": "",
+      "phase": "版本研发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "沈初霁",
+        "cf_effort": 200,
+        "cf_duration": 29,
+        "cf_acceptance": "2026-11-04",
+        "cf_accepted": false,
+        "cf_notes": "管线汇总下属任务的时间范围与进度；可折叠整个模块。"
+      }
+    },
+    {
+      "id": "art_flow",
+      "name": "Boss 资源制作流程",
+      "pid": "pipe_art",
+      "type": "task",
+      "s": "2026-10-07",
+      "e": "2026-10-23",
+      "pct": 36,
+      "who": "沈初霁",
+      "grp": "美术",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": true,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 88,
+        "cf_duration": 17,
+        "cf_acceptance": "2026-10-23",
+        "cf_accepted": false,
+        "cf_notes": "紧凑流程泳道：子任务按日期排在同一父行；重叠项自动另起泳道，悬停父条可展开细节。"
+      }
+    },
+    {
+      "id": "concept",
+      "name": "概念与配色",
+      "pid": "art_flow",
+      "type": "task",
+      "s": "2026-10-07",
+      "e": "2026-10-09",
+      "pct": 100,
+      "who": "沈初霁",
+      "grp": "美术",
+      "phase": "方案原型",
+      "deps": [
+        "scope"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 20,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-10-09",
+        "cf_accepted": true,
+        "cf_notes": "已完成、已验收示例。"
+      }
+    },
+    {
+      "id": "model",
+      "name": "模型与材质",
+      "pid": "art_flow",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-16",
+      "pct": 46,
+      "who": "温以宁",
+      "grp": "美术",
+      "phase": "制作开发",
+      "deps": [
+        "concept"
+      ],
+      "fold": false,
+      "flow": true,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 32,
+        "cf_duration": 5,
+        "cf_acceptance": "2026-10-16",
+        "cf_accepted": false,
+        "cf_notes": "嵌套流程示例：悬停这段父条可展开拓扑与贴图子任务。"
+      }
+    },
+    {
+      "id": "topology",
+      "name": "高低模与拓扑",
+      "pid": "model",
+      "type": "task",
+      "s": "2026-10-12",
+      "e": "2026-10-14",
+      "pct": 70,
+      "who": "温以宁",
+      "grp": "美术",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 20,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-10-14",
+        "cf_accepted": false,
+        "cf_notes": "紧凑流程中的下一级子任务。"
+      }
+    },
+    {
+      "id": "texture",
+      "name": "贴图烘焙与材质",
+      "pid": "model",
+      "type": "task",
+      "s": "2026-10-15",
+      "e": "2026-10-16",
+      "pct": 10,
+      "who": "温以宁",
+      "grp": "美术",
+      "phase": "制作开发",
+      "deps": [
+        "topology"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 12,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-16",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "rig",
+      "name": "骨骼与绑定",
+      "pid": "art_flow",
+      "type": "task",
+      "s": "2026-10-19",
+      "e": "2026-10-20",
+      "pct": 0,
+      "who": "陆景川",
+      "grp": "技术美术",
+      "phase": "制作开发",
+      "deps": [
+        "model"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 12,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-20",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "shader",
+      "name": "溶解材质与受击闪白",
+      "pid": "art_flow",
+      "type": "task",
+      "s": "2026-10-14",
+      "e": "2026-10-21",
+      "pct": 15,
+      "who": "陆景川",
+      "grp": "技术美术",
+      "phase": "制作开发",
+      "deps": [
+        "concept"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 24,
+        "cf_duration": 8,
+        "cf_acceptance": "2026-10-21",
+        "cf_accepted": false,
+        "cf_notes": "与建模、绑定交叠，展示自动多泳道排布。"
+      }
+    },
+    {
+      "id": "art_review",
+      "name": "资源中期检查",
+      "pid": "art_flow",
+      "type": "milestone",
+      "s": "2026-10-15",
+      "e": "2026-10-15",
+      "pct": 0,
+      "who": "沈初霁",
+      "grp": "美术",
+      "phase": "制作开发",
+      "deps": [
+        "concept"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 1,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "沈初霁",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-10-15",
+        "cf_accepted": false,
+        "cf_notes": "流程内节点；该日与两条任务重叠，可观察跨泳道节点指示。"
+      }
+    },
+    {
+      "id": "asset_gate",
+      "name": "资产可集成",
+      "pid": "art_flow",
+      "type": "milestone",
+      "s": "2026-10-23",
+      "e": "2026-10-23",
+      "pct": 0,
+      "who": "陆景川",
+      "grp": "技术美术",
+      "phase": "制作开发",
+      "deps": [
+        "rig",
+        "shader"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "沈初霁",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-10-23",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "animation_flow",
+      "name": "动作与特效生产流程",
+      "pid": "pipe_art",
+      "type": "task",
+      "s": "2026-10-21",
+      "e": "2026-10-30",
+      "pct": 0,
+      "who": "江屿",
+      "grp": "动画",
+      "phase": "制作开发",
+      "deps": [],
+      "fold": false,
+      "flow": true,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "江屿",
+        "cf_effort": 76,
+        "cf_duration": 10,
+        "cf_acceptance": "2026-10-30",
+        "cf_accepted": false,
+        "cf_notes": "另一组紧凑泳道。动作与技能特效并行，资源依赖跨模块连接。"
+      }
+    },
+    {
+      "id": "attack_anim",
+      "name": "攻击动作与转场",
+      "pid": "animation_flow",
+      "type": "task",
+      "s": "2026-10-21",
+      "e": "2026-10-26",
+      "pct": 0,
+      "who": "江屿",
+      "grp": "动画",
+      "phase": "制作开发",
+      "deps": [
+        "rig"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "江屿",
+        "cf_effort": 32,
+        "cf_duration": 6,
+        "cf_acceptance": "2026-10-26",
+        "cf_accepted": false,
+        "cf_notes": "动作依赖绑定，展示跨父任务连线。"
+      }
+    },
+    {
+      "id": "hit_anim",
+      "name": "受击、倒地与死亡",
+      "pid": "animation_flow",
+      "type": "task",
+      "s": "2026-10-27",
+      "e": "2026-10-28",
+      "pct": 0,
+      "who": "江屿",
+      "grp": "动画",
+      "phase": "制作开发",
+      "deps": [
+        "attack_anim"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "江屿",
+        "cf_effort": 14,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-10-28",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "vfx",
+      "name": "技能特效与危险预警",
+      "pid": "animation_flow",
+      "type": "task",
+      "s": "2026-10-22",
+      "e": "2026-10-28",
+      "pct": 0,
+      "who": "苏晚晴",
+      "grp": "技术美术",
+      "phase": "制作开发",
+      "deps": [
+        "shader",
+        "skill_config"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "陆景川",
+        "cf_effort": 30,
+        "cf_duration": 7,
+        "cf_acceptance": "2026-10-28",
+        "cf_accepted": false,
+        "cf_notes": "多个前置来自两条管线，展示跨管线依赖。"
+      }
+    },
+    {
+      "id": "motion_gate",
+      "name": "视效验收",
+      "pid": "animation_flow",
+      "type": "milestone",
+      "s": "2026-10-30",
+      "e": "2026-10-30",
+      "pct": 0,
+      "who": "沈初霁",
+      "grp": "美术",
+      "phase": "联调验收",
+      "deps": [
+        "hit_anim",
+        "vfx"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "沈初霁",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-10-30",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "audio",
+      "name": "音效与战斗音乐",
+      "pid": "pipe_art",
+      "type": "task",
+      "s": "2026-10-19",
+      "e": "2026-10-26",
+      "pct": 0,
+      "who": "唐映雪",
+      "grp": "音频",
+      "phase": "制作开发",
+      "deps": [
+        "prototype_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "唐映雪",
+        "cf_effort": 24,
+        "cf_duration": 8,
+        "cf_acceptance": "2026-10-26",
+        "cf_accepted": false,
+        "cf_notes": "自定义职能「音频」及独立配色示例，可用顶部职能标签筛选。"
+      }
+    },
+    {
+      "id": "promo",
+      "name": "宣传截图与短视频（待认领）",
+      "pid": "pipe_art",
+      "type": "task",
+      "s": "2026-11-02",
+      "e": "2026-11-04",
+      "pct": 0,
+      "who": "",
+      "grp": "发行运营",
+      "phase": "制作开发",
+      "deps": [
+        "motion_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p2",
+        "cf_owner": "沈初霁",
+        "cf_effort": 12,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-11-04",
+        "cf_accepted": false,
+        "cf_notes": "负责人留空但 Owner 明确；展示待认领任务与低优先级分支。"
+      }
+    },
+    {
+      "id": "pipe_release",
+      "name": "03 · 联调验收与版本发布",
+      "pid": null,
+      "type": "pipeline",
+      "s": "2026-10-27",
+      "e": "2026-11-13",
+      "pct": 0,
+      "who": "孟疏桐",
+      "grp": "",
+      "phase": "版本研发",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "孟疏桐",
+        "cf_effort": 106,
+        "cf_duration": 18,
+        "cf_acceptance": "2026-11-13",
+        "cf_accepted": false,
+        "cf_notes": "管线汇总下属任务的时间范围与进度；可折叠整个模块。"
+      }
+    },
+    {
+      "id": "integration",
+      "name": "联调与测试",
+      "pid": "pipe_release",
+      "type": "task",
+      "s": "2026-10-27",
+      "e": "2026-11-06",
+      "pct": 0,
+      "who": "孟疏桐",
+      "grp": "质量保障",
+      "phase": "联调验收",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "孟疏桐",
+        "cf_effort": 74.5,
+        "cf_duration": 11,
+        "cf_acceptance": "2026-11-06",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "integrate",
+      "name": "资源接入与战斗联调",
+      "pid": "integration",
+      "type": "task",
+      "s": "2026-10-27",
+      "e": "2026-10-30",
+      "pct": 0,
+      "who": "陈墨",
+      "grp": "程序",
+      "phase": "联调验收",
+      "deps": [
+        "playable",
+        "asset_gate",
+        "audio"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 24,
+        "cf_duration": 4,
+        "cf_acceptance": "2026-10-30",
+        "cf_accepted": false,
+        "cf_notes": "多个前置汇合，资源、玩法与音频均就绪后才进入联调。"
+      }
+    },
+    {
+      "id": "early_regression",
+      "name": "回归测试（故意提前，体验冲突）",
+      "pid": "integration",
+      "type": "task",
+      "s": "2026-10-29",
+      "e": "2026-11-03",
+      "pct": 0,
+      "who": "孟疏桐",
+      "grp": "质量保障",
+      "phase": "联调验收",
+      "deps": [
+        "integrate",
+        "motion_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "孟疏桐",
+        "cf_effort": 24,
+        "cf_duration": 6,
+        "cf_acceptance": "2026-11-03",
+        "cf_accepted": false,
+        "cf_notes": "演示中唯一故意保留的依赖时间冲突：前置 10/30 才结束，本任务 10/29 已开始。\n双击将日期改为 11/02–11/05，告警应消失；可用撤销恢复原样。"
+      }
+    },
+    {
+      "id": "performance",
+      "name": "性能与内存预算",
+      "pid": "integration",
+      "type": "task",
+      "s": "2026-11-02",
+      "e": "2026-11-04",
+      "pct": 0,
+      "who": "陆景川",
+      "grp": "技术美术",
+      "phase": "联调验收",
+      "deps": [
+        "integrate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陆景川",
+        "cf_effort": 18,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-11-04",
+        "cf_accepted": false,
+        "cf_notes": "验收目标：战斗稳定 60 FPS，峰值内存不超过约定预算。"
+      }
+    },
+    {
+      "id": "accessibility",
+      "name": "手柄与可读性检查",
+      "pid": "integration",
+      "type": "task",
+      "s": "2026-11-02",
+      "e": "2026-11-04",
+      "pct": 0,
+      "who": "顾清禾",
+      "grp": "策划",
+      "phase": "联调验收",
+      "deps": [
+        "integrate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p2",
+        "cf_owner": "顾清禾",
+        "cf_effort": 8.5,
+        "cf_duration": 3,
+        "cf_acceptance": "2026-11-04",
+        "cf_accepted": false,
+        "cf_notes": "数字字段支持小数：预计 8.5 小时；不把天数当作工时。"
+      }
+    },
+    {
+      "id": "qa_gate",
+      "name": "版本验收通过",
+      "pid": "integration",
+      "type": "milestone",
+      "s": "2026-11-06",
+      "e": "2026-11-06",
+      "pct": 0,
+      "who": "孟疏桐",
+      "grp": "质量保障",
+      "phase": "联调验收",
+      "deps": [
+        "early_regression",
+        "performance",
+        "accessibility"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "孟疏桐",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-11-06",
+        "cf_accepted": false,
+        "cf_notes": "回归、性能和可读性三条分支汇合。"
+      }
+    },
+    {
+      "id": "release",
+      "name": "发布与复盘",
+      "pid": "pipe_release",
+      "type": "task",
+      "s": "2026-11-09",
+      "e": "2026-11-13",
+      "pct": 0,
+      "who": "叶时雨",
+      "grp": "发行运营",
+      "phase": "发布复盘",
+      "deps": [],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "叶时雨",
+        "cf_effort": 31.5,
+        "cf_duration": 5,
+        "cf_acceptance": "2026-11-13",
+        "cf_accepted": false,
+        "cf_notes": "发布准备、最终节点与复盘，展示更远日期和月视图。"
+      }
+    },
+    {
+      "id": "release_candidate",
+      "name": "候选包与回滚演练",
+      "pid": "release",
+      "type": "task",
+      "s": "2026-11-09",
+      "e": "2026-11-10",
+      "pct": 0,
+      "who": "许星遥",
+      "grp": "程序",
+      "phase": "发布复盘",
+      "deps": [
+        "qa_gate"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "陈墨",
+        "cf_effort": 12,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-11-10",
+        "cf_accepted": false,
+        "cf_notes": ""
+      }
+    },
+    {
+      "id": "release_notes",
+      "name": "公告与客服 FAQ",
+      "pid": "release",
+      "type": "task",
+      "s": "2026-11-09",
+      "e": "2026-11-10",
+      "pct": 0,
+      "who": "叶时雨",
+      "grp": "发行运营",
+      "phase": "发布复盘",
+      "deps": [
+        "qa_gate",
+        "promo"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "叶时雨",
+        "cf_effort": 10,
+        "cf_duration": 2,
+        "cf_acceptance": "2026-11-10",
+        "cf_accepted": false,
+        "cf_notes": "Owner 与负责人可不同；按负责人搜索可快速定位个人任务。"
+      }
+    },
+    {
+      "id": "launch",
+      "name": "版本正式发布",
+      "pid": "release",
+      "type": "milestone",
+      "s": "2026-11-11",
+      "e": "2026-11-11",
+      "pct": 0,
+      "who": "叶时雨",
+      "grp": "发行运营",
+      "phase": "发布复盘",
+      "deps": [
+        "release_candidate",
+        "release_notes"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p0",
+        "cf_owner": "叶时雨",
+        "cf_effort": 0,
+        "cf_duration": 0,
+        "cf_acceptance": "2026-11-11",
+        "cf_accepted": false,
+        "cf_notes": "零工期的重要节点；顶部发布旗是另一种不占行的全局里程碑。"
+      }
+    },
+    {
+      "id": "observe",
+      "name": "上线观察与问题收敛",
+      "pid": "release",
+      "type": "task",
+      "s": "2026-11-12",
+      "e": "2026-11-12",
+      "pct": 0,
+      "who": "孟疏桐",
+      "grp": "质量保障",
+      "phase": "发布复盘",
+      "deps": [
+        "launch"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p1",
+        "cf_owner": "孟疏桐",
+        "cf_effort": 6,
+        "cf_duration": 1,
+        "cf_acceptance": "2026-11-12",
+        "cf_accepted": false,
+        "cf_notes": "单日普通任务，区别于零工期节点。"
+      }
+    },
+    {
+      "id": "retro",
+      "name": "复盘与模板沉淀",
+      "pid": "release",
+      "type": "task",
+      "s": "2026-11-13",
+      "e": "2026-11-13",
+      "pct": 0,
+      "who": "林知行",
+      "grp": "策划",
+      "phase": "发布复盘",
+      "deps": [
+        "observe"
+      ],
+      "fold": false,
+      "flow": false,
+      "lane": 0,
+      "customValues": {
+        "cf_priority": "fo_p2",
+        "cf_owner": "林知行",
+        "cf_effort": 3.5,
+        "cf_duration": 1,
+        "cf_acceptance": "2026-11-13",
+        "cf_accepted": false,
+        "cf_notes": "预计工期按含首尾的自然日计，不自动扣周末；工时为人工估算。\n可试：日/周/月、职能/阶段筛选、搜索、任务表格、列宽拖拽、复制、撤销、导出 JSON/图片。"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "策划",
+      "color": "#2f6fe8"
+    },
+    {
+      "name": "美术",
+      "color": "#ec4899"
+    },
+    {
+      "name": "程序",
+      "color": "#0ea5e9"
+    },
+    {
+      "name": "技术策划",
+      "color": "#a855f7"
+    },
+    {
+      "name": "技术美术",
+      "color": "#575ae8"
+    },
+    {
+      "name": "动画",
+      "color": "#f59e0b"
+    },
+    {
+      "name": "质量保障",
+      "color": "#16a34a"
+    },
+    {
+      "name": "音频",
+      "color": "#0891b2"
+    },
+    {
+      "name": "发行运营",
+      "color": "#e46b39"
+    }
+  ],
+  "flags": [
+    {
+      "id": "flag_review",
+      "name": "原型评审",
+      "d": "2026-10-09",
+      "color": "#2f6fe8"
+    },
+    {
+      "id": "flag_playable",
+      "name": "可玩版本",
+      "d": "2026-10-23",
+      "color": "#a855f7"
+    },
+    {
+      "id": "flag_freeze",
+      "name": "内容冻结",
+      "d": "2026-11-02",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "flag_launch",
+      "name": "正式发布",
+      "d": "2026-11-11",
+      "color": "#16a34a"
+    }
+  ],
+  "meta": {
+    "title": "星火行动 · Boss 突袭版本｜全功能示例",
+    "defView": "week",
+    "layoutVersion": 2,
+    "lw": 620,
+    "paneAuto": true,
+    "nameAutoWidth": false,
+    "cols": {
+      "name": 280,
+      "person": 78,
+      "cf_priority": 118,
+      "start": 80,
+      "end": 80,
+      "pct": 60,
+      "grp": 100,
+      "phase": 112,
+      "cf_owner": 100,
+      "cf_effort": 140,
+      "cf_duration": 128,
+      "cf_acceptance": 100,
+      "cf_accepted": 80,
+      "cf_notes": 340
+    },
+    "columnOrder": [
+      "name",
+      "person",
+      "cf_priority",
+      "start",
+      "end",
+      "pct",
+      "grp",
+      "phase",
+      "cf_owner",
+      "cf_effort",
+      "cf_duration",
+      "cf_acceptance",
+      "cf_accepted",
+      "cf_notes"
+    ],
+    "hiddenColumns": [],
+    "hiddenRoles": [],
+    "customFields": [
+      {
+        "id": "cf_priority",
+        "name": "优先级",
+        "type": "select",
+        "options": [
+          {
+            "id": "fo_p0",
+            "label": "P0 · 必须交付"
+          },
+          {
+            "id": "fo_p1",
+            "label": "P1 · 重要"
+          },
+          {
+            "id": "fo_p2",
+            "label": "P2 · 优化"
+          }
+        ]
+      },
+      {
+        "id": "cf_owner",
+        "name": "Owner",
+        "type": "text"
+      },
+      {
+        "id": "cf_effort",
+        "name": "预计工时（小时）",
+        "type": "number"
+      },
+      {
+        "id": "cf_duration",
+        "name": "预计工期（天）",
+        "type": "number"
+      },
+      {
+        "id": "cf_acceptance",
+        "name": "验收日期",
+        "type": "date"
+      },
+      {
+        "id": "cf_accepted",
+        "name": "验收通过",
+        "type": "checkbox"
+      },
+      {
+        "id": "cf_notes",
+        "name": "备注",
+        "type": "text"
+      }
+    ],
+    "roleColors": {
+      "策划": "#2f6fe8",
+      "美术": "#ec4899",
+      "程序": "#0ea5e9",
+      "技术策划": "#a855f7",
+      "技术美术": "#575ae8",
+      "动画": "#f59e0b",
+      "质量保障": "#16a34a",
+      "音频": "#0891b2",
+      "发行运营": "#e46b39"
+    }
+  }
+}

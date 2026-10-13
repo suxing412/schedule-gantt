@@ -1,0 +1,70 @@
+<div class="app-shell" id="app-shell">
+  <aside class="workspace-nav" aria-label="项目导航" hidden>
+    <nav class="view-navigation"><button class="nav-item active" data-view="gantt">项目排期</button><button class="nav-item" data-view="table">任务表格</button></nav>
+    <div id="pipeline-nav" class="pipeline-nav"></div><button id="nav-fields">列与字段</button>
+  </aside>
+  <header class="workspace-topbar">
+    <a class="brand" href="#" id="brand-home" aria-label="项目排期首页"><span class="brand-mark" aria-hidden="true">S</span><span class="brand-word">排期</span></a>
+    <button class="icon-button" id="nav-toggle" aria-label="导航" aria-expanded="false" hidden>☰</button>
+    <div class="breadcrumb"><span class="breadcrumb-slash">/</span><strong id="breadcrumb-view">项目排期</strong></div>
+    <div class="topbar-actions">
+      <div class="shared-topbar" id="shared-topbar" hidden>
+        <span class="shared-role" id="shared-role">只读浏览</span><span class="shared-save-state" id="shared-save-state" role="status"></span>
+        <button class="btn" id="shared-copy-link" type="button">复制分享链接</button>
+        <button class="btn" id="shared-presence" type="button" hidden>协作者</button>
+        <button class="btn" id="shared-ai" type="button" hidden>AI 接入</button>
+        <button class="btn primary" id="shared-unlock" type="button">输入编辑码</button>
+        <button class="btn ghost" id="shared-logout" type="button" hidden>退出编辑</button>
+      </div>
+      <span class="save-dot" id="save-dot" role="status">已保存</span>
+      <div class="menu-host" id="project-file-actions">
+        <button class="btn ghost" id="file-menu-toggle" aria-expanded="false" aria-controls="file-menu">项目文件 <span class="chevron"><img src="frontend/assets/chevron.svg" alt=""></span></button>
+        <div class="action-menu" id="file-menu" hidden><div class="menu-label">排期数据</div><button id="btn-import" data-shared-edit>导入 JSON <span>打开排期</span></button><button id="btn-export">导出 JSON <span>备份 / 迁移</span></button><div class="menu-divider"></div><button id="btn-png">导出图片 <span>PNG</span></button></div>
+      </div>
+      <button class="icon-button" id="btn-settings" title="项目设置" aria-label="项目设置" data-shared-edit>⚙</button>
+      <button class="icon-button" id="btn-help" title="使用帮助" aria-label="使用帮助">?</button>
+    </div>
+  </header>
+  <section class="shared-gateway" id="shared-gateway" hidden aria-label="共享排期">
+    <div class="shared-home" id="shared-home" hidden>
+      <div class="shared-intro"><span class="eyebrow">SHARED SCHEDULE</span><h1>一个链接，<br>一起安排项目。</h1><p>所有人打开链接即可查看排期。<br>输入昵称和四位编辑码，即可一起编辑。</p><div class="shared-feature"><span>01</span><p>共享同一份任务与时间轴</p></div><div class="shared-feature"><span>02</span><p>保留任务、管线和自定义字段</p></div><div class="shared-feature"><span>03</span><p>修改自动保存到此服务器</p></div></div>
+      <form class="shared-create-form" id="shared-create-form">
+        <div><h2>新建共享排期</h2><p class="shared-form-description">从空白排期开始。当前浏览器中的本地数据不会上传。</p></div>
+        <label>排期名称<input id="shared-create-title" name="title" type="text" maxlength="100" placeholder="例如：新版本研发排期" autocomplete="off" required></label>
+        <label>你的昵称<input id="shared-create-name" name="displayName" type="text" maxlength="40" placeholder="方便成员识别你的修改" autocomplete="nickname" required></label>
+        <label>设置四位编辑码<input id="shared-create-code" name="editCode" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" placeholder="4 位数字" autocomplete="new-password" required><span class="shared-field-note">持有链接的人可以查看；持有编辑码的人可以修改。请将编辑码单独发给协作者。</span></label>
+        <p class="shared-form-error" id="shared-create-error" role="alert" hidden></p>
+        <button class="btn primary" id="shared-create-submit" type="submit">创建共享排期</button>
+        <p class="shared-storage-label" data-shared-storage>开发存储 · 数据保存在此服务器</p>
+      </form>
+    </div>
+    <div class="shared-loading" id="shared-loading" hidden role="status"><span class="shared-loading-mark" aria-hidden="true"></span><h1>正在打开排期</h1><p>正在读取最新的共享数据…</p></div>
+    <div class="shared-error-page" id="shared-error-page" hidden><span class="eyebrow">SHARED SCHEDULE</span><h1 id="shared-error-title">暂时无法打开排期</h1><p id="shared-error-message" role="alert"></p><div class="shared-error-actions"><button class="btn primary" id="shared-retry-load" type="button">重新加载</button><a class="btn" href="/">新建共享排期</a></div></div>
+  </section>
+  <main class="workspace" id="workspace-main">
+    <div class="shared-notice" id="shared-notice" hidden role="status"><div class="shared-notice-copy"><strong id="shared-notice-title"></strong><p id="shared-notice-message"></p></div><div class="shared-notice-actions"><button class="btn" id="shared-export-draft" type="button">导出我的草稿</button><button class="btn" id="shared-retry-save" type="button" hidden>重试保存</button><button class="btn" id="shared-load-latest" type="button">加载最新版</button></div><div class="shared-conflict-confirm" id="shared-conflict-confirm" hidden><p>加载最新版将放弃当前未保存的修改。你可以先导出草稿留存。</p><button class="btn danger" id="shared-confirm-latest" type="button">放弃修改并加载</button><button class="btn ghost" id="shared-cancel-latest" type="button">取消</button></div></div>
+    <section class="project-header" aria-label="项目概览">
+      <div class="project-heading"><div class="project-heading-copy"><h1><input id="project-name" class="project-name" aria-label="项目名称" title="点击修改项目名称" maxlength="100" value="项目排期"></h1><p id="project-date-range" class="project-date-range">让每一步进展清晰可见</p></div></div>
+      <div class="project-metrics" aria-label="项目统计"><div class="project-metric"><strong id="metric-tasks">0</strong><span>任务</span></div><div class="project-metric"><strong id="metric-milestones">0</strong><span>节点 / 里程碑</span></div><div class="project-metric progress-metric"><strong><span id="metric-progress">0</span><small>%</small></strong><span>整体进度</span><div class="metric-track"><i id="metric-progress-bar"></i></div></div></div>
+    </section>
+    <section class="planning-surface" aria-label="排期工作区">
+      <div class="view-bar"><div class="view-tabs" role="group" aria-label="排期展示方式"><button class="view-tab active" data-view="gantt" aria-pressed="true">甘特排期</button><button class="view-tab" data-view="table" aria-pressed="false">任务表格</button></div><div class="view-bar-actions"><span class="view-hint" id="view-hint">拖动安排时间 · 双击编辑任务</span><button class="btn ghost" id="layout-reset" title="恢复表格与时间轴的默认比例">重置比例</button><button class="btn ghost" id="btn-fields" data-shared-edit>列设置</button><button class="btn ghost" id="header-add-field" data-shared-edit type="button" title="添加字段" aria-label="添加字段">＋ 添加字段</button></div></div>
+      <div class="toolbar" role="toolbar" aria-label="排期操作">
+        <div class="toolbar-create menu-host"><button class="btn primary" id="btn-add-task" data-shared-edit title="新建任务">＋ 新建任务</button><button class="btn primary create-menu-toggle" id="create-menu-toggle" data-shared-edit title="更多新建选项" aria-label="更多新建选项" aria-expanded="false" aria-controls="create-menu"><span class="chevron"><img src="frontend/assets/chevron.svg" alt=""></span></button><div class="action-menu create-menu" id="create-menu" hidden><div class="menu-label">添加到排期</div><button id="btn-add-pipe" data-shared-edit>新建管线 <span>组织一组任务</span></button><button id="btn-add-child" data-shared-edit>添加子任务 <span>到选中任务下</span></button><button id="btn-add-ms" data-shared-edit>添加重要节点 <span>单个交付时点</span></button><button id="btn-add-flag" data-shared-edit>添加里程碑 <span>标记关键日期</span></button></div></div>
+        <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="tb-search" class="tb-search" placeholder="搜索任务、负责人…" aria-label="搜索任务或负责人"><kbd>Ctrl F</kbd></label>
+        <div class="toolbar-spacer"></div>
+        <div class="timeline-controls" id="timeline-controls"><button class="btn" id="btn-today" title="定位今天">今天</button><div class="seg" id="zoom-seg" role="group" aria-label="时间轴视图"><button data-z="day" class="seg-btn" aria-pressed="false">日</button><button data-z="week" class="seg-btn active" aria-pressed="true">周</button><button data-z="month" class="seg-btn" aria-pressed="false">月</button></div><button class="btn canvas-scale-reset" id="canvas-scale-reset" type="button" title="Alt + 滚轮等比缩放整图；点击恢复 100%" aria-label="画布缩放 100%，点击恢复">100%</button></div>
+        <div class="history-controls"><button class="icon-button" id="btn-undo" data-shared-edit title="撤销 (Ctrl+Z)" aria-label="撤销">↶</button><button class="icon-button" id="btn-redo" data-shared-edit title="重做 (Ctrl+Y)" aria-label="重做">↷</button></div>
+      </div>
+      <div class="filter-strip"><div class="filter-bar"><div class="legend" id="legend" aria-label="按职能或阶段筛选"></div><button class="text-button" id="clear-filters" hidden>清除筛选</button></div>
+      <div class="selection-toolbar" id="selection-toolbar" hidden><span id="selection-label"></span><button class="text-button" id="selection-edit" data-shared-edit>编辑任务</button><button class="text-button" data-command="child" data-shared-edit>添加子任务</button><button class="text-button danger" id="btn-del" data-shared-edit title="删除选中 (Delete)">删除</button><button class="icon-button" id="selection-clear" aria-label="取消选择" title="取消选择">×</button></div></div>
+      <div class="gantt" id="gantt">
+        <div class="g-left" id="g-left"><div class="g-left-hd" id="g-left-hd" aria-label="排期属性列"></div><div class="g-left-body" id="g-left-body"></div></div>
+        <div class="splitter" id="splitter" role="separator" aria-label="调整表格与时间轴比例" title="拖动调整左右比例；双击恢复默认" aria-controls="g-left g-right" aria-orientation="vertical" tabindex="0"></div>
+        <div class="g-right" id="g-right"><div class="tl-header" id="tl-header"></div><div class="tl-body" id="tl-body"><canvas class="dep-canvas" id="dep-canvas"></canvas><div class="b-layer" id="b-layer"></div></div></div>
+      </div>
+      <footer class="canvas-footer"><span class="tb-stats" id="tb-stats"></span><span class="footer-hint">中键拖动画布 <span>·</span> Alt 滚轮等比缩放 <span>·</span> 点击任务查看依赖链</span></footer>
+    </section>
+    <div class="shared-workspace-note" id="shared-workspace-note" hidden><span data-shared-storage>开发存储 · 数据保存在此服务器</span><span id="shared-last-update"></span><span id="shared-copy-feedback" aria-live="polite"></span></div>
+  </main>
+</div>

@@ -3,3 +3,10 @@ dist/
 排期数据.json
 *.rar
 *.zip
+.repair-work/
+release/
+.data/
+.env
+.env.*
+!.env.example
+排期数据.previous.json

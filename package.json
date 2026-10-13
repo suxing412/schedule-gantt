@@ -1,13 +1,30 @@
 {
   "name": "schedule-gantt",
-  "version": "1.4.4",
-  "description": "排期工具 - 甘特图视图桌面应用",
+  "version": "1.4.5",
+  "description": "排期工具 - 支持共享排期的网页服务与桌面应用",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "build": "node scripts/build-frontend.cjs",
+    "prestart": "node scripts/build-frontend.cjs",
+    "start": "node server.js",
+    "predesktop": "node scripts/build-frontend.cjs",
+    "desktop": "electron .",
+    "release:web": "node scripts/release-web.cjs",
+    "start:workbuddy": "node cloud/serve.cjs",
+    "prestart:workbuddy": "node scripts/build-frontend.cjs",
+    "release:workbuddy": "node scripts/release-workbuddy.cjs",
+    "vendor:workbuddy": "node scripts/vendor-workbuddy-sdk.cjs",
+    "ai:mcp": "node cloud/ai/mcp.cjs",
+    "check:workbuddy-sdk": "node scripts/vendor-workbuddy-sdk.cjs --check",
+    "predist": "node scripts/build-frontend.cjs",
     "dist": "electron-builder",
-    "pack": "electron-builder --dir"
+    "prepack": "node scripts/build-frontend.cjs",
+    "pack": "electron-builder --dir",
+    "pretest": "node scripts/build-frontend.cjs",
+    "test": "node --test test/*.test.cjs",
+    "preview": "node scripts/preview.cjs"
   },
+  "engines": {"node": ">=22"},
   "author": "",
   "license": "MIT",
   "build": {
@@ -33,6 +50,8 @@
       "main.js",
       "preload.js",
       "index.html",
+      "project-validation.js",
+      "frontend/assets/**/*",
       "node_modules/**/*"
     ]
   },

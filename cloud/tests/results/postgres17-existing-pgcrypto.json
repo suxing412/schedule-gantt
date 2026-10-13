@@ -1,0 +1,68 @@
+{
+  "ok": true,
+  "postgres": "17.11",
+  "pgcryptoMode": "existing public extension",
+  "checks": [
+    {
+      "name": "migration rerun succeeds and anonymous crypto entry points are denied",
+      "ok": true
+    },
+    {
+      "name": "create as anon issues random board-bound 12h token",
+      "ok": true
+    },
+    {
+      "name": "migration rerun preserves existing projects and editor sessions",
+      "ok": true
+    },
+    {
+      "name": "public reads exclude hash/session; anonymous direct tables/helpers denied",
+      "ok": true
+    },
+    {
+      "name": "Unicode helpers match JavaScript UTF-16 and trimming boundaries",
+      "ok": true
+    },
+    {
+      "name": "more than ten successful unlocks do not exhaust board failure allowance",
+      "ok": true
+    },
+    {
+      "name": "wrong code denied and persisted; success preserves previous failures",
+      "ok": true
+    },
+    {
+      "name": "invalid/cross-board tokens cannot update",
+      "ok": true
+    },
+    {
+      "name": "twenty concurrent saves from two sessions yield one revision winner",
+      "ok": true
+    },
+    {
+      "name": "validation rejects unsafe/private layout without incrementing revision",
+      "ok": true
+    },
+    {
+      "name": "expired token denied; revoked token denied",
+      "ok": true
+    },
+    {
+      "name": "rollback requests rejected without performing authentication",
+      "ok": true
+    },
+    {
+      "name": "40 concurrent wrong attempts reserve exactly 10; no overshoot",
+      "ok": true
+    },
+    {
+      "name": "window expiry permits correct code again",
+      "ok": true
+    },
+    {
+      "name": "caller forced outer rollback still defeats stored failures: deployment prerequisite",
+      "ok": true
+    }
+  ],
+  "limitation": "Real PostgreSQL tested; WorkBuddy/PostgREST forced rollback configuration requires deployment verification."
+}

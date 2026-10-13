@@ -1,0 +1,26 @@
+/* These emphasis layers are memory-only; role colors, selection and critical paths remain visible. */
+.highlight-controls { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-left:auto; padding-left:12px; border-left:1px solid var(--border); color:var(--text-2); font-size:11px; }
+.highlight-controls label { white-space:nowrap; }
+.highlight-controls select { max-width:150px; min-height:27px; padding:3px 22px 3px 7px; border:1px solid var(--border); border-radius:3px; background:var(--surface); color:var(--text); font:inherit; text-overflow:ellipsis; }
+.highlight-controls.is-active select { background:#fff6dd; border-color:#b68b26; }
+.highlight-controls select:focus-visible,.highlight-clear:focus-visible,.highlight-chain-status:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.highlight-clear { min-height:27px; padding:2px 5px; border:0; background:transparent; color:var(--text-2); font:inherit; cursor:pointer; }
+.highlight-clear:hover { color:var(--text); text-decoration:underline; }
+.highlight-chain-status { color:#087e8b; white-space:nowrap; min-width:9em; min-height:27px; padding:2px 0; border:0; background:transparent; text-align:right; font:inherit; cursor:pointer; }
+.highlight-chain-status:hover:not(:disabled) { color:#075e67; text-decoration:underline; }
+.highlight-chain-status:empty { visibility:hidden; }
+#g-left-body .hl-owner-match { background-color:#fff5d9; }
+#b-layer .hl-owner-match:is(.bar,.pin,.ms,.lane-band,.pipe-head) { filter:drop-shadow(0 0 3px #b68b26); }
+#g-left-body .hl-owner-dim,#b-layer .hl-owner-dim { opacity:.3; }
+#g-left-body .hl-chain-dim,#b-layer .hl-chain-dim { opacity:.2; }
+#g-left-body .hl-chain-match,#b-layer .hl-chain-match { opacity:1; }
+#g-left-body .hl-owner-match.hl-chain-dim,#b-layer .hl-owner-match.hl-chain-dim { opacity:.55; }
+#g-left-body .hl-chain-match { box-shadow:inset 3px 0 #128a95; }
+#g-left-body .hl-chain-root { box-shadow:inset 3px 0 #075e67; }
+#b-layer .hl-chain-match:is(.bar,.pin,.ms,.lane-band,.pipe-head) { outline:2px solid #128a95; outline-offset:4px; }
+#b-layer .hl-chain-root:is(.bar,.pin,.ms,.lane-band) { outline-width:3px; outline-color:#075e67; }
+#b-layer .bar.ghosted.hl-chain-match { opacity:.4; }
+@media (max-width:900px) {
+  .filter-bar { flex-wrap:wrap; }
+  .highlight-controls { padding-left:0; border-left:0; }
+}

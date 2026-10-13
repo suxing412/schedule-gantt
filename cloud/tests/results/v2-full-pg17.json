@@ -1,0 +1,227 @@
+{
+  "ok": true,
+  "completedAt": "2026-10-12T07:09:16.067Z",
+  "scope": "V2 authentication, presence, and action RPC",
+  "postgres": "17.11",
+  "pgcryptoMode": "fresh private extension",
+  "migrationSha256": {
+    "001_schedule_rpc.sql": "48fb2e455cc79f43beb1f30169d15b85d102a2b017f9ff3d19a577981f09b167",
+    "002_collab_external.sql": "187fffcc8b9b8e1d000003650c7f3b91c1248c6e443469ee5ab64a4d1414f55d",
+    "003_tool_actions.sql": "8c4eddfbe364aa16c41d9d24254e86534a1130cde9689edc9d693ef36a57592e"
+  },
+  "checks": [
+    {
+      "name": "V1 data and sessions survive V2 upgrade; legacy API digest is initialized privately",
+      "ok": true
+    },
+    {
+      "name": "legacy PIN reset issues the first usable key; create returns one-time API key",
+      "ok": true
+    },
+    {
+      "name": "V2 migration is idempotent and preserves key, board, and both session kinds",
+      "ok": true
+    },
+    {
+      "name": "public records never reveal API key, hash, or sessions; anonymous private access is denied",
+      "ok": true
+    },
+    {
+      "name": "wrong API key, cross-board key, malformed key, and expired token are rejected",
+      "ok": true
+    },
+    {
+      "name": "presence requires a valid board-bound session and returns only safe member fields",
+      "ok": true
+    },
+    {
+      "name": "same nicknames remain separate; offline holders and heartbeat are accurate without project writes",
+      "ok": true
+    },
+    {
+      "name": "external sessions cannot call legacy save and human writes keep source human",
+      "ok": true
+    },
+    {
+      "name": "external rate limits serialize concurrent requests and do not consume human PIN budget",
+      "ok": true
+    },
+    {
+      "name": "presence has an independent budget and cannot exhaust edit-code or external budgets",
+      "ok": true
+    },
+    {
+      "name": "wrong PIN reset persists failure counts; unsupported rollback headers do not run authorization",
+      "ok": true
+    },
+    {
+      "name": "key reset invalidates all external sessions and old key while preserving human access and revision",
+      "ok": true
+    },
+    {
+      "name": "concurrent reset and old-key exchange cannot leave an authorized old-key session behind",
+      "ok": true
+    },
+    {
+      "name": "session cap bounds holders to fifty; external revoke removes only its own session",
+      "ok": true
+    },
+    {
+      "name": "forced outer rollback remains a deployment boundary and is reported explicitly",
+      "ok": true
+    },
+    {
+      "name": "action migration reruns without replacing data, keys, or sessions",
+      "ok": true
+    },
+    {
+      "name": "action RPC rejects missing, human, expired, and cross-board sessions before applying changes",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: project.replace",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: project.update",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: role.add",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: role.update",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.add",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.update",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.move",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.reorder",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.shift",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.duplicate",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: dependency.add",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: dependency.remove",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: dependency.set",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: phase.rename",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: phase.remove",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: field.add",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: field.values.set",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: field.update",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: field.remove",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: flag.add",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: flag.update",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: flag.remove",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: project.shift",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: role.remove",
+      "ok": true
+    },
+    {
+      "name": "SQL/JavaScript parity: task.remove",
+      "ok": true
+    },
+    {
+      "name": "all catalog mutation names are exercised; deleted options and internal duplicate dependencies are handled",
+      "ok": true
+    },
+    {
+      "name": "field types, trimming, select cleanup, short colors, and role/phase whitespace match JavaScript",
+      "ok": true
+    },
+    {
+      "name": "an atomic batch permits forward references and increments the revision only once",
+      "ok": true
+    },
+    {
+      "name": "batch failure rolls back every project change while committing its external budget reservation",
+      "ok": true
+    },
+    {
+      "name": "SQL and JavaScript reject invalid dates, dependency cycles, hierarchy cycles, field misuse, and unsafe properties",
+      "ok": true
+    },
+    {
+      "name": "empty, overlarge, and malformed batches are rejected without state changes",
+      "ok": true
+    },
+    {
+      "name": "no-op actions preserve the revision and a real edit records the external author",
+      "ok": true
+    },
+    {
+      "name": "twenty concurrent actions at one revision have exactly one winner and nineteen safe conflicts",
+      "ok": true
+    },
+    {
+      "name": "revocation racing an action cannot authorize later writes with the revoked session",
+      "ok": true
+    },
+    {
+      "name": "key rotation racing an action cannot leave an old external token able to write",
+      "ok": true
+    },
+    {
+      "name": "action rollback preferences are rejected before consuming budget or changing state",
+      "ok": true
+    }
+  ],
+  "limitation": "Real isolated PostgreSQL only. WorkBuddy/PostgREST gateway transaction-commit and forced-rollback configuration require separate deployment verification. No live board was modified."
+}

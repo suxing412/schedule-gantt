@@ -1,0 +1,207 @@
+<!-- Task details -->
+<div class="ovl task-overlay" id="ovl" hidden>
+  <div class="dlg task-drawer" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+    <div class="dlg-hd">
+      <div class="dlg-heading"><p class="dialog-kicker">任务详情</p><span id="dlg-title">编辑任务</span></div>
+      <button class="dlg-close" id="dlg-close" aria-label="关闭任务详情">&times;</button>
+    </div>
+    <div class="dlg-body" id="dlg-body">
+      <section class="editor-section" aria-labelledby="task-basics-title">
+        <h3 class="editor-section-title" id="task-basics-title">基本信息</h3>
+        <label>名称<input type="text" id="f-name" autofocus placeholder="输入任务名称"></label>
+        <div class="pair">
+          <label>类型<select id="f-type"><option value="task">任务</option><option value="milestone">重要节点</option><option value="pipeline" hidden>管线</option></select></label>
+          <label class="f-lbl-grp">职能<select id="f-group"></select></label>
+        </div>
+        <div class="pair">
+          <label>负责人<input type="text" id="f-assignee" placeholder="例如：张三"></label>
+          <label>阶段<input type="text" id="f-phase" list="phase-list" placeholder="例如：原型阶段" autocomplete="off"></label>
+        </div>
+        <datalist id="phase-list"></datalist>
+      </section>
+      <section class="editor-section" aria-labelledby="task-schedule-title">
+        <h3 class="editor-section-title" id="task-schedule-title">时间与进度</h3>
+        <div class="pair">
+          <label class="f-lbl-start">开始<input type="date" id="f-start"></label>
+          <label class="f-lbl-end">结束<input type="date" id="f-end"></label>
+          <label class="f-lbl-lane" style="display:none">所在行列<select id="f-lane"></select></label>
+        </div>
+        <label class="f-lbl-pct"><span class="progress-label">完成进度 <span class="progress-value"><span id="f-pctv">0</span>%</span></span><input type="range" id="f-progress" min="0" max="100" step="5" value="0"></label>
+        <div class="f-sum-hint" id="f-sum-hint" style="display:none">父任务的起止日期与进度由子任务自动汇总。调整时间请编辑子任务，或拖动父任务整体挪期。</div>
+        <label class="f-lbl-flow"><input type="checkbox" id="f-flow"><span>流程模式<span class="control-hint">把子任务和节点排在同一行展示</span></span></label>
+      </section>
+      <section id="f-custom-block" class="set-sec editor-section" hidden>
+        <h3 class="editor-section-title">自定义字段</h3>
+        <div class="fields-task-grid" id="f-custom-fields"></div>
+      </section>
+      <section id="f-deps-block" class="editor-section">
+        <div class="fdeps-label">前置依赖<span id="f-deps-count"></span></div>
+        <p class="control-hint">以下任务完成后，本任务才能开始。</p>
+        <div class="dep-chips" id="dep-chips"></div>
+        <div class="dep-picker">
+          <input type="text" id="f-deps-search" class="fdeps-search" aria-label="搜索前置任务" placeholder="搜索任务、负责人或职能" autocomplete="off">
+          <div class="dep-sug" id="dep-sug" hidden></div>
+        </div>
+        <div class="dep-hint">也可在时间轴按住 <kbd>Ctrl</kbd>，从前置任务拖线到本任务。</div>
+      </section>
+    </div>
+    <div class="dlg-ft"><button class="btn" id="dlg-cancel">取消</button><button class="btn primary" id="dlg-save">保存</button></div>
+  </div>
+</div>
+
+<!-- Milestone flag -->
+<div class="ovl" id="flag-ovl" hidden>
+  <div class="dlg milestone-dialog" role="dialog" aria-modal="true" aria-labelledby="flag-title">
+    <div class="dlg-hd"><span id="flag-title">里程碑</span><button class="dlg-close" id="flag-close" aria-label="关闭里程碑">&times;</button></div>
+    <div class="dlg-body">
+      <p class="dialog-description">在时间轴上标记关键日期。</p>
+      <label>名称<input type="text" id="fl-name" placeholder="例如：一测版本封板"></label>
+      <label>日期<input type="date" id="fl-date"></label>
+      <label>标记颜色<div class="fl-colors" id="fl-colors"></div></label>
+    </div>
+    <div class="dlg-ft">
+      <button class="btn danger footer-start" id="fl-del">删除</button>
+      <button class="btn" id="fl-cancel">取消</button><button class="btn primary" id="fl-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project settings -->
+<div class="ovl" id="set-ovl" hidden>
+  <div class="dlg settings-dialog" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <div class="dlg-hd"><span id="set-title">项目设置</span><button class="dlg-close" id="set-close" aria-label="关闭项目设置">&times;</button></div>
+    <div class="dlg-body">
+      <section class="set-sec">
+        <div class="set-title">任务职能<span class="set-sub">名称和颜色会同步到所有任务。使用中的职能不可删除。</span></div>
+        <div id="set-roles" class="settings-list"></div><button class="btn align-start" id="set-role-add">＋ 添加职能</button>
+      </section>
+      <section class="set-sec">
+        <div class="set-title">项目阶段<span class="set-sub">编辑任务时可直接输入新阶段。</span></div>
+        <div id="set-phases" class="settings-list"></div>
+      </section>
+      <section class="set-sec"><label>启动默认视图<select id="set-defview"><option value="day">日</option><option value="week">周</option><option value="month">月</option></select></label></section>
+    </div>
+    <div class="dlg-ft"><button class="btn primary" id="set-done">完成</button></div>
+  </div>
+</div>
+
+<!-- Column visibility and field definitions -->
+<div class="ovl" id="fields-ovl" hidden>
+  <div class="dlg fields-manager" role="dialog" aria-modal="true" aria-labelledby="fields-title">
+    <div class="dlg-hd"><div class="dlg-heading"><span id="fields-title">列与字段</span><p class="dialog-description">安排表格信息，记录任务属性。</p></div><button class="dlg-close" id="fields-close" aria-label="关闭列与字段管理">&times;</button></div>
+    <div class="dlg-body fields-layout">
+      <section class="fields-columns-pane" aria-labelledby="fields-columns-title">
+        <div class="fields-pane-heading"><h3 id="fields-columns-title">表格列</h3><p class="fields-note">勾选显示，使用箭头调整顺序。</p></div>
+        <div id="fields-list" class="fields-list" role="list" aria-label="列的显示和顺序"></div>
+        <div class="fields-layout-option">
+          <button class="btn" id="fields-reset-widths" type="button">恢复默认列宽</button>
+          <p class="fields-note">拖动列头边缘调整单列，双击适应内容。面板比例单独调整，放不下的列可以横向滚动查看。</p>
+        </div>
+      </section>
+      <section class="fields-form-pane" aria-label="添加或编辑字段">
+        <div id="fields-editor" class="set-sec fields-editor" hidden>
+          <div class="fields-pane-heading"><h3>编辑字段</h3><p class="fields-kind" id="fields-edit-type"></p></div>
+          <label>字段名称<input type="text" id="fields-edit-name" maxlength="128" autocomplete="off"></label>
+          <div id="fields-edit-options" class="set-sec" hidden>
+            <div class="set-title">单选选项<span class="set-sub">改名和排序保留已有选择；删除选项会清空对应任务值。</span></div>
+            <div id="fields-edit-options-list" class="fields-option-list"></div>
+            <button class="btn align-start" id="fields-edit-option-add" type="button">＋ 添加选项</button>
+          </div>
+          <div class="fields-edit-actions"><button class="btn" id="fields-edit-cancel" type="button">取消修改</button><button class="btn primary" id="fields-edit-save" type="button">保存修改</button></div>
+        </div>
+        <section class="set-sec fields-presets-block">
+          <div class="fields-pane-heading"><h3>常用排期字段</h3><p class="fields-note">快速添加团队常用的信息。</p></div>
+          <div class="fields-presets" aria-label="快捷添加常用字段">
+            <button class="btn" type="button" data-field-preset="priority">＋ 优先级</button>
+            <button class="btn" type="button" data-field-preset="owner">Owner（负责人）</button>
+            <button class="btn" type="button" data-field-preset="role">职能</button>
+            <button class="btn" type="button" data-field-preset="hours">＋ 预计工时</button>
+            <button class="btn" type="button" data-field-preset="duration">＋ 预计工期</button>
+            <button class="btn" type="button" data-field-preset="notes">＋ 备注</button>
+          </div>
+          <p class="fields-note">Owner 和职能复用已有数据。工时按小时、工期按天记录，不改变起止日期。</p>
+        </section>
+        <section class="set-sec fields-new">
+          <h3>自定义字段</h3>
+          <label>字段名称<input type="text" id="fields-add-name" maxlength="128" placeholder="例如：验收标准" autocomplete="off"></label>
+          <label>字段类型<select id="fields-add-type"><option value="text">文本</option><option value="number">数字</option><option value="date">日期</option><option value="select">单选</option><option value="checkbox">勾选</option></select></label>
+          <label id="fields-add-options-label" hidden>单选选项<textarea id="fields-add-options" rows="3" placeholder="每行一个选项，例如：&#10;高&#10;中&#10;低"></textarea></label>
+          <p class="fields-note">类型创建后固定。数字支持小数；日期只记录属性，不改变任务排期。</p>
+          <button class="btn primary align-start" id="fields-add" type="button">＋ 添加字段</button>
+        </section>
+      </section>
+    </div>
+    <div class="dlg-ft"><p class="fields-note footer-start">修改即时保存。隐藏列会保留数据。</p><button class="btn primary" id="fields-done" type="button">完成</button></div>
+  </div>
+</div>
+
+<!-- Help -->
+<div class="ovl" id="help-ovl" hidden>
+  <div class="dlg help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="dlg-hd"><span id="help-title">使用帮助</span><button class="dlg-close" id="help-close" aria-label="关闭使用帮助">&times;</button></div>
+    <div class="help-body">
+      <section><h4>安排任务</h4><ul>
+        <li>拖动任务条调整日期，拖动两端调整起止时间。拖拽中按 <kbd>Esc</kbd> 取消。</li>
+        <li>双击任务条或左侧行编辑；双击时间轴空白处，在该日期新建任务。</li>
+        <li><kbd>Shift</kbd> + 点击任务条可多选，左侧行也支持 <kbd>Ctrl</kbd> + 点击。多选后可整体拖动、批量挪期或删除。</li>
+        <li>右键任务或空白处，可添加子任务、复制、切换流程模式或删除。</li>
+        <li>拖动左侧行首把手：放在行的上下边缘为同级排序，放在行中部则设为子任务。</li>
+        <li>管线是顶层容器，可在下面建立功能模块和任务。父任务的日期、进度由子任务自动汇总。</li>
+      </ul></section>
+      <section><h4>调整视图</h4><ul>
+        <li>拖动中间分隔线调整左右比例，双击恢复默认比例。拖动列头边缘只调整该列，双击适应内容。</li>
+        <li>两边可独立横向滚动，纵向滚动同步。名称列在空间足够时固定；「列与字段」可以管理列顺序、显示和自定义字段。</li>
+        <li>点击职能或阶段筛选任务；名称和颜色可在「项目设置」中管理。</li>
+        <li>时间轴会向左右自动延伸。<kbd>Shift</kbd> + 滚轮可横向滚动。</li>
+        <li><kbd>Alt</kbd> + 滚轮以鼠标位置为中心等比缩放整图，日期格、行高、任务条和文字一起变化；点击百分比恢复 100%，日、周、月切换时间粒度并恢复比例。</li>
+        <li>在「负责人高亮」中选择昵称可突出显示其任务；点击任务条或任务行固定显示完整上下游依赖链，点击其他任务切换，点击画布空白或「依赖链 ×」提示取消。</li>
+        <li>流程模式把子项排在同一行，悬停在收起的子父任务上可展开内部流程。</li>
+      </ul></section>
+      <section><h4>依赖与关键日期</h4><ul>
+        <li>按住 <kbd>Ctrl</kbd> 从前置任务拖线到后置任务，建立依赖。推荐同层级任务之间建立依赖。</li>
+        <li>重要节点占一行并可设置依赖；在流程泳道内可与任务条重叠，用于标记验收等检查点。</li>
+        <li>里程碑以旗子和贯穿时间轴的虚线标记。双击日期栏插入，点击旗子编辑或删除。</li>
+        <li>红色描边表示关键路径；橙色警告表示开始日期早于前置任务完成日期。</li>
+      </ul></section>
+      <section><h4>键盘快捷键</h4><dl class="shortcut-list">
+        <div><dt>撤销 / 重做</dt><dd><kbd>Ctrl</kbd> <kbd>Z</kbd> / <kbd>Ctrl</kbd> <kbd>Y</kbd></dd></div>
+        <div><dt>搜索</dt><dd><kbd>Ctrl</kbd> <kbd>F</kbd></dd></div>
+        <div><dt>选择任务</dt><dd><kbd>↑</kbd> <kbd>↓</kbd></dd></div>
+        <div><dt>挪期一天 / 七天</dt><dd><kbd>←</kbd> <kbd>→</kbd> / 同时按 <kbd>Shift</kbd></dd></div>
+        <div><dt>编辑选中项 / 保存编辑</dt><dd><kbd>Enter</kbd></dd></div>
+        <div><dt>删除选中项</dt><dd><kbd>Delete</kbd></dd></div>
+        <div><dt>关闭弹窗、取消多选或筛选</dt><dd><kbd>Esc</kbd></dd></div>
+      </dl></section>
+      <section><h4>保存与传递</h4><p id="help-save-description">数据自动保存在当前浏览器。桌面版同时备份到程序目录下的「排期数据.json」。使用导入、导出功能，通过 JSON 文件传递完整排期。</p></section>
+    </div>
+  </div>
+</div>
+
+<!-- Shared workspace editing permission -->
+<div class="ovl" id="shared-presence-ovl" hidden>
+  <section class="dlg shared-collaboration-dialog" role="dialog" aria-modal="true" aria-labelledby="shared-presence-title">
+    <div class="dlg-hd"><div class="dlg-heading"><p class="dialog-kicker">共享排期</p><span id="shared-presence-title">协作者</span></div><button class="dlg-close" id="shared-presence-close" type="button" aria-label="关闭协作者">×</button></div>
+    <div class="dlg-body"><p class="dialog-description">显示仍持有效编辑会话的协作者。昵称由使用者填写，同名会话会分别显示；并非实名认证。</p><p id="shared-presence-summary" class="shared-field-note" role="status"></p><p class="shared-form-error" id="shared-presence-error" role="alert" hidden></p><ul id="shared-presence-list" class="shared-presence-list" aria-label="有效编辑会话"></ul><p class="shared-field-note">最近 60 秒收到活动信号视为在线。页面在前台时每 20 秒更新一次，退出或关闭页面后停止。</p></div>
+    <div class="dlg-ft"><button class="btn" id="shared-presence-refresh" type="button">刷新列表</button><button class="btn primary" id="shared-presence-done" type="button">完成</button></div>
+  </section>
+</div>
+<div class="ovl" id="shared-ai-ovl" hidden>
+  <section class="dlg shared-collaboration-dialog" role="dialog" aria-modal="true" aria-labelledby="shared-ai-title">
+    <div class="dlg-hd"><div class="dlg-heading"><p class="dialog-kicker">外部工具</p><span id="shared-ai-title">AI 接入</span></div><button class="dlg-close" id="shared-ai-close" type="button" aria-label="关闭 AI 接入">×</button></div>
+    <div class="dlg-body">
+      <p class="dialog-description">将排期链接和独立 AI 密钥交给你信任的 AI 或程序，即可读取排期并调用任务、依赖、字段等工具。</p>
+      <div class="shared-ai-discovery"><a href="/api/tools" target="_blank" rel="noopener">工具清单</a><a href="/api/openapi.json" target="_blank" rel="noopener">OpenAPI 文档</a></div>
+      <section id="shared-ai-once" hidden><label for="shared-ai-key">AI 密钥 · 仅本次显示</label><textarea id="shared-ai-key" rows="3" readonly autocomplete="off" spellcheck="false" aria-describedby="shared-ai-once-note"></textarea><p id="shared-ai-once-note" class="shared-field-note">关闭后无法再次查看，请先复制保存。AI 用密钥换取编辑会话，不要把密钥拼进网址。</p><button class="btn primary" id="shared-ai-copy" type="button">复制 AI 密钥</button></section>
+      <form id="shared-ai-reset-form"><p class="dialog-description">没有保存密钥，或需要停止之前 AI 的访问？用四位编辑码生成新密钥，旧密钥及所有 AI 会话会立即失效，人工编辑不受影响。</p><label>四位编辑码<input id="shared-ai-code" name="editCode" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="current-password" required></label><button class="btn" id="shared-ai-reset" type="submit">生成 / 重置 AI 密钥</button></form>
+      <p class="shared-form-error" id="shared-ai-error" role="alert" hidden></p><p id="shared-ai-feedback" class="shared-field-note" role="status"></p>
+    </div>
+    <div class="dlg-ft"><button class="btn primary" id="shared-ai-done" type="button">完成</button></div>
+  </section>
+</div>
+<div class="ovl" id="shared-unlock-ovl" hidden>
+  <form class="dlg shared-unlock-dialog" id="shared-unlock-form" role="dialog" aria-modal="true" aria-labelledby="shared-unlock-title">
+    <div class="dlg-hd"><div class="dlg-heading"><p class="dialog-kicker">共享排期</p><span id="shared-unlock-title">进入编辑模式</span></div><button class="dlg-close" id="shared-unlock-close" type="button" aria-label="关闭编辑码窗口">×</button></div>
+    <div class="dlg-body"><p class="dialog-description">输入昵称和创建者提供的四位编辑码，即可修改这份排期。</p><label>你的昵称<input id="shared-unlock-name" name="displayName" type="text" maxlength="40" placeholder="你的昵称" autocomplete="nickname" required></label><label>四位编辑码<input id="shared-unlock-code" name="editCode" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" placeholder="4 位数字" autocomplete="current-password" required></label><p class="shared-form-error" id="shared-unlock-error" role="alert" hidden></p></div>
+    <div class="dlg-ft"><button class="btn" id="shared-unlock-cancel" type="button">继续只读浏览</button><button class="btn primary" id="shared-unlock-submit" type="submit">进入编辑模式</button></div>
+  </form>
+</div>

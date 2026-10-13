@@ -1,0 +1,31 @@
+{
+  "styles": [
+    "styles/tokens.css",
+    "styles/components.css",
+    "styles/gantt.css",
+    "styles/dialogs.css",
+    "styles/workspace.css",
+    "styles/highlight.css"
+  ],
+  "scripts": [
+    "scripts/core.js",
+    "scripts/project.js",
+    "scripts/axis.js",
+    "scripts/bar-geometry.js",
+    "scripts/render.js",
+    "scripts/interactions.js",
+    "scripts/editor.js",
+    "scripts/fields.js",
+    "scripts/settings.js",
+    "scripts/cloud-transport.js",
+    "scripts/shared.js",
+    "scripts/persistence.js",
+    "scripts/export.js",
+    "scripts/app-shell.js",
+    "scripts/bindings.js",
+    "scripts/columns.js",
+    "scripts/highlight.js",
+    "scripts/browser-tools.js",
+    "scripts/init.js"
+  ]
+}

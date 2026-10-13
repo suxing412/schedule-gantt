@@ -1,0 +1,18 @@
+{
+  "name": "@tencent-ai/workbuddy-cloud-sdk",
+  "version": "0.1.3",
+  "source": "https://registry.npmjs.org/@tencent-ai/workbuddy-cloud-sdk/-/workbuddy-cloud-sdk-0.1.3.tgz",
+  "integrity": "sha512-hKWPy+2Dt/NcSA40J+4l4ILu7tVLEeiv2bQaCIl/po0mDwQHxDHrcxcs/uvv4HzWGM8RYpVRgSd1M8HGLi+WNQ==",
+  "license": "MIT",
+  "browserGlobal": "WorkBuddyCloud",
+  "files": {
+    "workbuddy-sdk.js": {
+      "bytes": 62057,
+      "sha256": "64f437dcb30bec53a65cac36c4e0a38eb46b68e7ceee93662e3fa3cfb6fb5bde"
+    },
+    "workbuddy-sdk.LICENSE.txt": {
+      "bytes": 2816,
+      "sha256": "39d600a7fe7101309ac9aba2d7f454779709689fa239b9c253cf5c693dda2d41"
+    }
+  }
+}

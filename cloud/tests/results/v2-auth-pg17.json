@@ -1,0 +1,69 @@
+{
+  "ok": true,
+  "scope": "V2 authentication and presence only",
+  "postgres": "17.11",
+  "pgcryptoMode": "fresh private extension",
+  "checks": [
+    {
+      "name": "V1 data and sessions survive V2 upgrade; legacy API digest is initialized privately",
+      "ok": true
+    },
+    {
+      "name": "legacy PIN reset issues the first usable key; create returns one-time API key",
+      "ok": true
+    },
+    {
+      "name": "V2 migration is idempotent and preserves key, board, and both session kinds",
+      "ok": true
+    },
+    {
+      "name": "public records never reveal API key, hash, or sessions; anonymous private access is denied",
+      "ok": true
+    },
+    {
+      "name": "wrong API key, cross-board key, malformed key, and expired token are rejected",
+      "ok": true
+    },
+    {
+      "name": "presence requires a valid board-bound session and returns only safe member fields",
+      "ok": true
+    },
+    {
+      "name": "same nicknames remain separate; offline holders and heartbeat are accurate without project writes",
+      "ok": true
+    },
+    {
+      "name": "external sessions cannot call legacy save and human writes keep source human",
+      "ok": true
+    },
+    {
+      "name": "external rate limits serialize concurrent requests and do not consume human PIN budget",
+      "ok": true
+    },
+    {
+      "name": "presence has an independent budget and cannot exhaust edit-code or external budgets",
+      "ok": true
+    },
+    {
+      "name": "wrong PIN reset persists failure counts; unsupported rollback headers do not run authorization",
+      "ok": true
+    },
+    {
+      "name": "key reset invalidates all external sessions and old key while preserving human access and revision",
+      "ok": true
+    },
+    {
+      "name": "concurrent reset and old-key exchange cannot leave an authorized old-key session behind",
+      "ok": true
+    },
+    {
+      "name": "session cap bounds holders to fifty; external revoke removes only its own session",
+      "ok": true
+    },
+    {
+      "name": "forced outer rollback remains a deployment boundary and is reported explicitly",
+      "ok": true
+    }
+  ],
+  "limitation": "Real isolated PostgreSQL only. WorkBuddy/PostgREST gateway transaction-commit and forced-rollback configuration require separate deployment verification. No live board was modified."
+}
