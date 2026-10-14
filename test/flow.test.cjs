@@ -17,6 +17,7 @@ function harness(){
   let timerId=0;
   const context={
     console,
+    createHighlights:require('../frontend/scripts/highlight.js').createController,
     ScheduleBarGeometry:require('../frontend/scripts/bar-geometry.js'),
     canvasScaleFactor:()=>1,
     window:{},
@@ -36,26 +37,92 @@ function harness(){
     let proj,filterQ='',filterGrp=null,filterPhase=null,selIds=new Set(),crit=new Set(),cf=new Set(),dragging=false;
     let axis={dw:22,tw:1000},bds={mn:0},bPos={},rowYs=[],rowsHTotal=0,depRows=null,depH=0,depPixelScale=0,depPreview=null,renderCount=0;
     const RH=40,SUBP=26,tD=s=>Number(s),textW=(s,size)=>s.length*size;
-    const $=()=>({clientWidth:800,scrollLeft:0});
+    const $=selector=>selector==='#tooltip'?{classList:{remove(){}}}:{clientWidth:800,scrollLeft:0};
     const bindTip=()=>{},nodeIconSvg=()=>'',barTextCol=()=> '#fff',render=()=>{renderCount++};
     const isCriticalDep=(from,to)=>{criticalChecks.push([from,to]);return false};
-    const ce=(tag,cls,text)=>({tag,className:cls||'',textContent:text,style:{},dataset:{},children:[],listeners:{},
-      classList:{add(){},remove(){}},appendChild(e){this.children.push(e)},addEventListener(kind,fn){this.listeners[kind]=fn}});
+    const ce=(tag,cls,text)=>{
+      const node={tag,className:cls||'',textContent:text,style:{},dataset:{},children:[],listeners:{},appendChild(e){this.children.push(e)},addEventListener(kind,fn){this.listeners[kind]=fn}};
+      node.classList={contains:name=>node.className.split(' ').includes(name),add(...names){node.className=[...new Set([...node.className.split(' ').filter(Boolean),...names])].join(' ')},remove(...names){node.className=node.className.split(' ').filter(name=>!names.includes(name)).join(' ')}};
+      return node;
+    };
+    let paintedLayers=[];
+    function paintedNodes(){const result=[],walk=node=>{result.push(node);for(const child of node.children)walk(child)};for(const layer of paintedLayers)walk(layer);return result}
+    const document={querySelectorAll(selector){return paintedNodes().filter(node=>selector.split('.').filter(Boolean).every(name=>node.classList.contains(name)))}};
     const mk=(id,pid,s,e,extra={})=>({id,pid,name:id,type:'task',s:String(s),e:String(e),deps:[],grp:'A',...extra});
-    function setup(tasks){proj={tasks,groups:[{name:'A',color:'#112233'},{name:'B',color:'#556677'}]};bPos={};expandedLanes.clear();filterQ='';filterGrp=null;filterPhase=null}
-    function paint(){const layer=ce('div');laneItems(layer,proj.tasks[0],0);return layer}
+    function setup(tasks){proj={tasks,groups:[{name:'A',color:'#112233'},{name:'B',color:'#556677'}]};bPos={};expandedLanes.clear();filterQ='';filterGrp=null;filterPhase=null;ScheduleHighlights.clear();ScheduleHighlights.beforeRender();paintedLayers=[]}
+    function paint(){ScheduleHighlights.beforeRender();const layer=ce('div');laneItems(layer,proj.tasks[0],0);paintedLayers=[layer];return layer}
+    function paintAll(){ScheduleHighlights.beforeRender();bPos={};const rows=vRows(),layer=ce('div');computeRowYs(rows);for(let i=0;i<rows.length;i++){const t=rows[i].t;if(isSum(t)&&t.flow)laneItems(layer,t,rowYs[i]);else rBar(layer,t,rowYs[i],isSum(t))}paintedLayers=[layer];return layer}
   `;
   const code=prelude+cut('// Data helpers','// Analysis')+
+    cut('function buildDependencyGraph(','function topoDependencyGraph(')+
     cut('const expandedLanes=','function render(){')+
     cut('function laneItems(','// hex → rgba')+
     cut('function rBar(ly,t,y,sum,claims,barTop)','/* 标签自适应布局')+
     cut('function claimsFree(','/* 管线：')+
-    cut('function drawDeps(','/* Ctrl-drag dep */');
+    cut('function drawDeps(','/* Ctrl-drag dep */')+
+    cut('function hideGanttTooltip(','/* Native scrolling owns')+
+    `const ScheduleHighlights=createHighlights({getProject:()=>proj,buildGraph:tasks=>buildDependencyGraph(tasks),revealTasks(){},redrawEdges(){}});`;
   vm.runInContext(code,context);
   const run=code=>vm.runInContext(code,context);
   const value=code=>JSON.parse(JSON.stringify(run(code)));
   return{run,value,timers,arrows,arrowFills,criticalChecks};
 }
+
+
+test('selected upstream/downstream chains keep nested tasks, geometry and dependency edges visible after hover exit',()=>{
+  const h=harness();
+  h.run("setup([mk('P',null,0,8,{flow:true}),mk('A','P',0,2),mk('AN','A',0,2),mk('a','AN',0,2),mk('unrelated','AN',0,2),mk('Q',null,3,8,{flow:true}),mk('B','Q',3,8),mk('BN','B',3,5),mk('b','BN',3,5,{deps:['a']}),mk('c','B',6,8,{deps:['b']})]);paintAll()");
+  assert.deepEqual(h.value('Object.keys(bPos).sort()'),['A','B']);
+  const original=h.run('JSON.stringify(proj)');
+  h.run("ScheduleHighlights.setSelected('b');paintAll();drawDeps(canvas,vRows(),rowsHTotal)");
+  assert.deepEqual(h.value("ScheduleHighlights.state().taskIds.slice().sort()"),['a','b','c']);
+  for(const id of ['a','b','c'])assert.equal(h.run("Boolean(bPos["+JSON.stringify(id)+"])"),true,id+' has rendered geometry');
+  assert.equal(h.run("ScheduleHighlights.revealsChildren('AN')&&ScheduleHighlights.revealsChildren('BN')"),true);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.criticalChecks)),[['a','b'],['b','c']]);
+  assert.equal(h.run("document.querySelectorAll('.lane-exp.show').length"),4);
+  const expandedHeight=h.run('rowsHTotal');
+  assert.equal(h.run('expandedLanes.size'),0,'selected chains are not stored in temporary hover state');
+  h.run('clearGanttHover()');
+  assert.equal(h.run("document.querySelectorAll('.lane-exp.show').length"),4,'leaving the timeline must not strip pinned DOM visibility');
+  h.run("expandedLanes.add('A');expandedLanes.add('AN');closeLane('A');clearLaneHover();paintAll()");
+  assert.equal(h.run('rowsHTotal'),expandedHeight);
+  for(const id of ['a','b','c'])assert.equal(h.run("Boolean(bPos["+JSON.stringify(id)+"])"),true,id+' survives closeLane and clearLaneHover');
+  h.criticalChecks.length=0;h.arrows.length=0;h.arrowFills.length=0;
+  h.run('drawDeps(canvas,vRows(),rowsHTotal)');
+  assert.deepEqual(JSON.parse(JSON.stringify(h.criticalChecks)),[['a','b'],['b','c']]);
+  assert.equal(h.run('JSON.stringify(proj)'),original);
+  h.run('ScheduleHighlights.setSelected(null);paintAll()');
+  assert.deepEqual(h.value('Object.keys(bPos).sort()'),['A','B']);
+  assert.equal(h.run("document.querySelectorAll('.lane-exp.show').length"),0);
+  assert.ok(h.run('rowsHTotal')<expandedHeight,'clearing restores the collapsed row heights');
+  h.criticalChecks.length=0;h.run('drawDeps(canvas,vRows(),rowsHTotal)');
+  assert.equal(h.criticalChecks.length,0);
+  assert.equal(h.run('JSON.stringify(proj)'),original);
+});
+
+test('a pending hover-close timer cannot hide a selected nested dependency task',()=>{
+  const h=harness();
+  h.run("setup([mk('P',null,0,5,{flow:true}),mk('B','P',0,5),mk('C','B',0,5),mk('D','C',0,5)]);const first=paint();const bar=first.children.find(node=>node.dataset.id==='B');bar.listeners.mouseenter();bar.listeners.mouseleave();ScheduleHighlights.setSelected('D');paint()");
+  assert.ok(h.timers.size,'a close timeout was already pending before the click');
+  for(const callback of [...h.timers.values()])callback();
+  h.run('bPos={};paint()');
+  assert.equal(h.run("Boolean(bPos.D)"),true);
+  assert.equal(h.run("ScheduleHighlights.state().selectedTaskId"),'D');
+  assert.equal(h.run("ScheduleHighlights.revealsChildren('B')&&ScheduleHighlights.revealsChildren('C')"),true);
+});
+
+test('normal folded ancestors temporarily reveal selected dependency tasks without changing fold preferences',()=>{
+  const h=harness();
+  h.run("setup([mk('P',null,0,5,{fold:true}),mk('B','P',0,5,{fold:true}),mk('a','B',0,2),mk('Q',null,3,5,{fold:true}),mk('b','Q',3,5,{deps:['a']})])");
+  const original=h.run('JSON.stringify(proj)');
+  assert.deepEqual(h.value('vRows().map(row=>row.t.id)'),['P','Q']);
+  h.run("ScheduleHighlights.setSelected('b');ScheduleHighlights.beforeRender()");
+  assert.deepEqual(h.value('vRows().map(row=>row.t.id)'),['P','B','a','Q','b']);
+  assert.deepEqual(h.value("ScheduleHighlights.state().taskIds.slice().sort()"),['a','b'],'parents remain visibility containers, not dependency-chain nodes');
+  h.run('ScheduleHighlights.setSelected(null);ScheduleHighlights.beforeRender()');
+  assert.deepEqual(h.value('vRows().map(row=>row.t.id)'),['P','Q']);
+  assert.equal(h.run('JSON.stringify(proj)'),original);
+});
 
 test('middle-button pan suppresses nested lane hover renders including already pending close timers',()=>{
   const h=harness();

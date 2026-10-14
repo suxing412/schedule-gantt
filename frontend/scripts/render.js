@@ -5,6 +5,26 @@ const SUBP=26;   // 子行间距（22px 条 + 4px 缝）
 let rowYs=[],rowsHTotal=0;
 // 展开状态在重绘间保留；关闭计时器共享，避免 DOM 重建后悬停层闪退。
 const expandedLanes=new Set(),laneCloseTimers=new Map();
+let highlightLayoutFrame=0;
+function isLaneExpanded(id){
+  return expandedLanes.has(id)||(typeof ScheduleHighlights!=='undefined'&&ScheduleHighlights.revealsChildren?.(id));
+}
+function refreshHighlightLayout(before,after){
+  const previous=new Set(before),next=new Set(after);
+  const changed=[...new Set([...before,...after])].some(id=>{
+    if(previous.has(id)===next.has(id)||expandedLanes.has(id))return false;
+    const task=byId(id);if(!task)return false;
+    if(task.fold&&!task.flow)return true;
+    // Top-level flow containers already show their direct children. Only nested
+    // containers require a geometry update when a chain pins them open.
+    for(let parent=byId(task.pid);parent;parent=byId(parent.pid))if(parent.flow)return true;
+    return false;
+  });
+  if(changed&&!highlightLayoutFrame)highlightLayoutFrame=requestAnimationFrame(()=>{
+    highlightLayoutFrame=0;render();
+  });
+  return changed;
+}
 function laneAssign(parent){
   const rangeOf=t=>{if(isSum(t))return eRange(t);const s=tD(t.s);return{s,e:t.type==='milestone'?s:tD(t.e)}};
   const keep=filteredTaskIds();
@@ -15,7 +35,7 @@ function laneAssign(parent){
     if(c.type==='milestone')continue;
     const r=rangeOf(c);let li=lanes.findIndex(end=>r.s>end);
     if(li<0){li=lanes.length;lanes.push(r.e)}else lanes[li]=r.e;
-    const span=isSum(c)&&expandedLanes.has(c.id)?laneAssign(c).depth:1;
+    const span=isSum(c)&&isLaneExpanded(c.id)?laneAssign(c).depth:1;
     baseMap.set(c.id,li);spans.set(c.id,span);sizes[li]=Math.max(sizes[li]||1,span);
   }
   if(!sizes.length)sizes.push(1);
@@ -34,7 +54,7 @@ function laneCoverage(parent,base=0){
     if(c.type==='milestone')continue;
     const r=isSum(c)?eRange(c):{s:tD(c.s),e:tD(c.e)},li=base+(map.get(c.id)||0);
     out.push({...r,lane:li});
-    if(isSum(c)&&expandedLanes.has(c.id))out.push(...laneCoverage(c,li));
+    if(isSum(c)&&isLaneExpanded(c.id))out.push(...laneCoverage(c,li));
   }
   return out;
 }
@@ -55,7 +75,7 @@ function laneClaims(parent){
       if(c.type==='milestone'){
         const ov=laneNodeOverlap(coverage,c),cx=(tD(c.s)-bds.mn)*axis.dw+axis.dw/2;
         claim(base+(ov?ov.lo:li),cx-6,cx+6);
-      }else if(isSum(c)&&expandedLanes.has(c.id))visit(c,base+li);
+      }else if(isSum(c)&&isLaneExpanded(c.id))visit(c,base+li);
     }
   };
   visit(parent,0);return claims;
@@ -79,6 +99,8 @@ function computeRowYs(rows){
 }
 
 function render(){
+  // Compute pinned ancestors before measuring rows or creating dependency endpoints.
+  if(typeof ScheduleHighlights!=='undefined')ScheduleHighlights.beforeRender?.();
   const rows=vRows();bds=compBounds(rows);axis=buildAxis(bds.mn,bds.mx,zoom);
   bPos=Object.create(null);analyze();computeRowYs(rows);
   // 重建 DOM 会让 mouseleave 丢失：渲染前强制收起悬停浮层，避免效果残留
@@ -325,7 +347,7 @@ function laneItems(ly,parent,y,sharedClaims,baseLane=0){
 function rLaneSub(ly,c,y,claims,barTop,sharedClaims,baseLane){
   claims=claims||[];
   const rg=eRange(c),geometry=ScheduleBarGeometry.span(rg.s,rg.e,bds.mn,axis.dw),{x,w,paintX,paintWidth}=geometry;
-  const bt=barTop!=null?barTop:y+(RH-22)/2,opened=expandedLanes.has(c.id);
+  const bt=barTop!=null?barTop:y+(RH-22)/2,opened=isLaneExpanded(c.id);
   bPos[c.id]={...geometry,y:bt,h:22,cy:bt+11,type:'task',summary:true,expanded:opened};
   const bar=ce('div','bar lane-sub'+(opened?' ghosted':''));bar.dataset.id=c.id;
   bar.style.left=paintX+'px';bar.style.top=bt+'px';bar.style.width=paintWidth+'px';bar.style.background=gc(c.grp);
@@ -587,16 +609,23 @@ function drawDeps(cv,rows,totalH){
   // axes are virtualised so a 10,000-row project cannot allocate a huge canvas.
   const desired=Math.max(1,(window.devicePixelRatio||1)*canvasScaleFactor());
   depPixelScale=desired;
-  const density=Math.min(desired,32760/vw,32760/vh,Math.sqrt(16000000/(vw*vh)));
-  cv.width=Math.max(1,Math.floor(vw*density));cv.height=Math.max(1,Math.floor(vh*density));
-  cv.style.width=vw+'px';cv.style.height=vh+'px';cv.style.left=sl+'px';cv.style.top=st+'px';
-  const rx=cv.width/vw,ry=cv.height/vh,ctx=cv.getContext('2d');ctx.setTransform(rx,0,0,ry,-sl*rx,-st*ry);
+  const overlay=$('#dep-highlight-canvas'),hasOverlay=overlay&&overlay!==cv&&typeof overlay.getContext==='function';
+  const density=Math.min(desired,32760/vw,32760/vh,Math.sqrt(16000000/(vw*vh*(hasOverlay?2:1))));
+  const prepare=canvas=>{
+    // Reset both bitmaps on every draw, including when a chain is cleared.
+    canvas.width=Math.max(1,Math.floor(vw*density));canvas.height=Math.max(1,Math.floor(vh*density));
+    canvas.style.width=vw+'px';canvas.style.height=vh+'px';canvas.style.left=sl+'px';canvas.style.top=st+'px';
+    const rx=canvas.width/vw,ry=canvas.height/vh,context=canvas.getContext('2d');
+    context.setTransform(rx,0,0,ry,-sl*rx,-st*ry);return context;
+  };
+  const backgroundCtx=prepare(cv),highlightCtx=hasOverlay?prepare(overlay):backgroundCtx;
   const visible=proj.tasks.filter(t=>bPos[t.id]&&!bPos[t.id].hidden),vs=new Set(visible.map(t=>t.id));
   const arrow=(fr,to,isC,fromId,toId)=>{
     if(Math.max(fr.cy,to.cy)<st-16||Math.min(fr.cy,to.cy)>st+vh+16)return;
     const route=ScheduleBarGeometry.connector(fr,to),bounds=ScheduleBarGeometry.connectorBounds(route);
     if(bounds.right<sl-16||bounds.left>sl+vw+16)return;
     const emphasis=typeof ScheduleHighlights!=='undefined'?ScheduleHighlights.edgeState(fromId,toId):{highlighted:false,opacity:1};
+    const ctx=emphasis.highlighted?highlightCtx:backgroundCtx;
     const color=isC?'#f53f3f':(emphasis.highlighted?'#087e8b':'#86909c');
     ctx.globalAlpha=emphasis.opacity;
     ctx.shadowColor=emphasis.highlighted?'#36c9d6':'transparent';ctx.shadowBlur=emphasis.highlighted?5:0;
@@ -615,6 +644,7 @@ function drawDeps(cv,rows,totalH){
     }
   }
   if(depPreview&&bPos[depPreview.id]){
+    const ctx=highlightCtx;
     const point=canvasClientPoint(depPreview,$('#tl-body'));
     const route=ScheduleBarGeometry.connector(bPos[depPreview.id],{type:'ms',cx:point.x,cy:point.y});
     ctx.beginPath();ctx.strokeStyle='#3370ff';ctx.lineWidth=2.2;ctx.setLineDash(route.kind==='adjacent-inline'?[]:[7,4]);

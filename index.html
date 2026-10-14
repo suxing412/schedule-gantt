@@ -324,7 +324,7 @@ kbd { padding: 1px 4px; border: 1px solid var(--border); background: var(--surfa
   width: 20px; height: 20px; background: #b84f08; color: #fff;
   font-size: 12px; font-weight: 600;
 }
-.tl-body { position: relative; }
+.tl-body { position: relative; isolation: isolate; }
 .grid-col { position: absolute; top: 0; border-right: 1px solid #f4f5f6; pointer-events: none; }
 .grid-col.wk { background: var(--weekend); }
 .grid-col.heavy { border-right: 1px solid #dce1e6; }
@@ -350,8 +350,12 @@ kbd { padding: 1px 4px; border: 1px solid var(--border); background: var(--surfa
 .bar.lane-sub .bar-name { font-weight: 500; }
 .bar.ghosted { opacity: .18; }
 .lane-tag { position: absolute; display: flex; align-items: center; z-index: 1; font-size: 11px; font-weight: 600; white-space: nowrap; pointer-events: none; }
-.dep-canvas { position: absolute; top: 0; left: 0; z-index: 2; overflow: visible; pointer-events: none; }
-.b-layer { position: absolute; top: 0; left: 0; z-index: 1; }
+/* Grid and group backgrounds < ordinary dependencies < tasks < selected chain.
+   Keep b-layer out of a stacking context so its grid cannot cover the low canvas. */
+.dep-canvas { position: absolute; top: 0; left: 0; z-index: 1; overflow: visible; pointer-events: none; }
+.dep-highlight-canvas { z-index: 4; }
+.b-layer { position: absolute; top: 0; left: 0; }
+.bar,.lane-band,.pipe-head,.lane-tag { z-index: 2; }
 
 /* Task bars — geometry matches the renderer's 22px height. */
 .bar {
@@ -905,7 +909,7 @@ body.drag-cross,body.drag-cross * { cursor: crosshair !important; }
       <div class="gantt" id="gantt">
         <div class="g-left" id="g-left"><div class="g-left-hd" id="g-left-hd" aria-label="排期属性列"></div><div class="g-left-body" id="g-left-body"></div></div>
         <div class="splitter" id="splitter" role="separator" aria-label="调整表格与时间轴比例" title="拖动调整左右比例；双击恢复默认" aria-controls="g-left g-right" aria-orientation="vertical" tabindex="0"></div>
-        <div class="g-right" id="g-right"><div class="tl-header" id="tl-header"></div><div class="tl-body" id="tl-body"><canvas class="dep-canvas" id="dep-canvas"></canvas><div class="b-layer" id="b-layer"></div></div></div>
+        <div class="g-right" id="g-right"><div class="tl-header" id="tl-header"></div><div class="tl-body" id="tl-body"><canvas class="dep-canvas" id="dep-canvas" aria-hidden="true"></canvas><div class="b-layer" id="b-layer"></div><canvas class="dep-canvas dep-highlight-canvas" id="dep-highlight-canvas" aria-hidden="true"></canvas></div></div>
       </div>
       <footer class="canvas-footer"><span class="tb-stats" id="tb-stats"></span><span class="footer-hint">中键拖动画布 <span>·</span> Alt 滚轮等比缩放 <span>·</span> 点击任务查看依赖链</span></footer>
     </section>
@@ -1357,7 +1361,7 @@ function filteredTaskIds(){
 }
 function vRows(){
   const o=[],keep=filteredTaskIds();
-  const w=(pid,dp)=>{for(const t of kids(pid)){if(keep&&!keep.has(t.id))continue;o.push({t,depth:dp});if(isSum(t)&&(keep||!t.fold)&&!t.flow)w(t.id,dp+1)}};
+  const w=(pid,dp)=>{for(const t of kids(pid)){if(keep&&!keep.has(t.id))continue;o.push({t,depth:dp});if(isSum(t)&&(keep||!t.fold||(typeof ScheduleHighlights!=='undefined'&&ScheduleHighlights.revealsChildren?.(t.id)))&&!t.flow)w(t.id,dp+1)}};
   w(null,0);return o;
 }
 
@@ -1747,6 +1751,26 @@ const SUBP=26;   // 子行间距（22px 条 + 4px 缝）
 let rowYs=[],rowsHTotal=0;
 // 展开状态在重绘间保留；关闭计时器共享，避免 DOM 重建后悬停层闪退。
 const expandedLanes=new Set(),laneCloseTimers=new Map();
+let highlightLayoutFrame=0;
+function isLaneExpanded(id){
+  return expandedLanes.has(id)||(typeof ScheduleHighlights!=='undefined'&&ScheduleHighlights.revealsChildren?.(id));
+}
+function refreshHighlightLayout(before,after){
+  const previous=new Set(before),next=new Set(after);
+  const changed=[...new Set([...before,...after])].some(id=>{
+    if(previous.has(id)===next.has(id)||expandedLanes.has(id))return false;
+    const task=byId(id);if(!task)return false;
+    if(task.fold&&!task.flow)return true;
+    // Top-level flow containers already show their direct children. Only nested
+    // containers require a geometry update when a chain pins them open.
+    for(let parent=byId(task.pid);parent;parent=byId(parent.pid))if(parent.flow)return true;
+    return false;
+  });
+  if(changed&&!highlightLayoutFrame)highlightLayoutFrame=requestAnimationFrame(()=>{
+    highlightLayoutFrame=0;render();
+  });
+  return changed;
+}
 function laneAssign(parent){
   const rangeOf=t=>{if(isSum(t))return eRange(t);const s=tD(t.s);return{s,e:t.type==='milestone'?s:tD(t.e)}};
   const keep=filteredTaskIds();
@@ -1757,7 +1781,7 @@ function laneAssign(parent){
     if(c.type==='milestone')continue;
     const r=rangeOf(c);let li=lanes.findIndex(end=>r.s>end);
     if(li<0){li=lanes.length;lanes.push(r.e)}else lanes[li]=r.e;
-    const span=isSum(c)&&expandedLanes.has(c.id)?laneAssign(c).depth:1;
+    const span=isSum(c)&&isLaneExpanded(c.id)?laneAssign(c).depth:1;
     baseMap.set(c.id,li);spans.set(c.id,span);sizes[li]=Math.max(sizes[li]||1,span);
   }
   if(!sizes.length)sizes.push(1);
@@ -1776,7 +1800,7 @@ function laneCoverage(parent,base=0){
     if(c.type==='milestone')continue;
     const r=isSum(c)?eRange(c):{s:tD(c.s),e:tD(c.e)},li=base+(map.get(c.id)||0);
     out.push({...r,lane:li});
-    if(isSum(c)&&expandedLanes.has(c.id))out.push(...laneCoverage(c,li));
+    if(isSum(c)&&isLaneExpanded(c.id))out.push(...laneCoverage(c,li));
   }
   return out;
 }
@@ -1797,7 +1821,7 @@ function laneClaims(parent){
       if(c.type==='milestone'){
         const ov=laneNodeOverlap(coverage,c),cx=(tD(c.s)-bds.mn)*axis.dw+axis.dw/2;
         claim(base+(ov?ov.lo:li),cx-6,cx+6);
-      }else if(isSum(c)&&expandedLanes.has(c.id))visit(c,base+li);
+      }else if(isSum(c)&&isLaneExpanded(c.id))visit(c,base+li);
     }
   };
   visit(parent,0);return claims;
@@ -1821,6 +1845,8 @@ function computeRowYs(rows){
 }
 
 function render(){
+  // Compute pinned ancestors before measuring rows or creating dependency endpoints.
+  if(typeof ScheduleHighlights!=='undefined')ScheduleHighlights.beforeRender?.();
   const rows=vRows();bds=compBounds(rows);axis=buildAxis(bds.mn,bds.mx,zoom);
   bPos=Object.create(null);analyze();computeRowYs(rows);
   // 重建 DOM 会让 mouseleave 丢失：渲染前强制收起悬停浮层，避免效果残留
@@ -2067,7 +2093,7 @@ function laneItems(ly,parent,y,sharedClaims,baseLane=0){
 function rLaneSub(ly,c,y,claims,barTop,sharedClaims,baseLane){
   claims=claims||[];
   const rg=eRange(c),geometry=ScheduleBarGeometry.span(rg.s,rg.e,bds.mn,axis.dw),{x,w,paintX,paintWidth}=geometry;
-  const bt=barTop!=null?barTop:y+(RH-22)/2,opened=expandedLanes.has(c.id);
+  const bt=barTop!=null?barTop:y+(RH-22)/2,opened=isLaneExpanded(c.id);
   bPos[c.id]={...geometry,y:bt,h:22,cy:bt+11,type:'task',summary:true,expanded:opened};
   const bar=ce('div','bar lane-sub'+(opened?' ghosted':''));bar.dataset.id=c.id;
   bar.style.left=paintX+'px';bar.style.top=bt+'px';bar.style.width=paintWidth+'px';bar.style.background=gc(c.grp);
@@ -2329,16 +2355,23 @@ function drawDeps(cv,rows,totalH){
   // axes are virtualised so a 10,000-row project cannot allocate a huge canvas.
   const desired=Math.max(1,(window.devicePixelRatio||1)*canvasScaleFactor());
   depPixelScale=desired;
-  const density=Math.min(desired,32760/vw,32760/vh,Math.sqrt(16000000/(vw*vh)));
-  cv.width=Math.max(1,Math.floor(vw*density));cv.height=Math.max(1,Math.floor(vh*density));
-  cv.style.width=vw+'px';cv.style.height=vh+'px';cv.style.left=sl+'px';cv.style.top=st+'px';
-  const rx=cv.width/vw,ry=cv.height/vh,ctx=cv.getContext('2d');ctx.setTransform(rx,0,0,ry,-sl*rx,-st*ry);
+  const overlay=$('#dep-highlight-canvas'),hasOverlay=overlay&&overlay!==cv&&typeof overlay.getContext==='function';
+  const density=Math.min(desired,32760/vw,32760/vh,Math.sqrt(16000000/(vw*vh*(hasOverlay?2:1))));
+  const prepare=canvas=>{
+    // Reset both bitmaps on every draw, including when a chain is cleared.
+    canvas.width=Math.max(1,Math.floor(vw*density));canvas.height=Math.max(1,Math.floor(vh*density));
+    canvas.style.width=vw+'px';canvas.style.height=vh+'px';canvas.style.left=sl+'px';canvas.style.top=st+'px';
+    const rx=canvas.width/vw,ry=canvas.height/vh,context=canvas.getContext('2d');
+    context.setTransform(rx,0,0,ry,-sl*rx,-st*ry);return context;
+  };
+  const backgroundCtx=prepare(cv),highlightCtx=hasOverlay?prepare(overlay):backgroundCtx;
   const visible=proj.tasks.filter(t=>bPos[t.id]&&!bPos[t.id].hidden),vs=new Set(visible.map(t=>t.id));
   const arrow=(fr,to,isC,fromId,toId)=>{
     if(Math.max(fr.cy,to.cy)<st-16||Math.min(fr.cy,to.cy)>st+vh+16)return;
     const route=ScheduleBarGeometry.connector(fr,to),bounds=ScheduleBarGeometry.connectorBounds(route);
     if(bounds.right<sl-16||bounds.left>sl+vw+16)return;
     const emphasis=typeof ScheduleHighlights!=='undefined'?ScheduleHighlights.edgeState(fromId,toId):{highlighted:false,opacity:1};
+    const ctx=emphasis.highlighted?highlightCtx:backgroundCtx;
     const color=isC?'#f53f3f':(emphasis.highlighted?'#087e8b':'#86909c');
     ctx.globalAlpha=emphasis.opacity;
     ctx.shadowColor=emphasis.highlighted?'#36c9d6':'transparent';ctx.shadowBlur=emphasis.highlighted?5:0;
@@ -2357,6 +2390,7 @@ function drawDeps(cv,rows,totalH){
     }
   }
   if(depPreview&&bPos[depPreview.id]){
+    const ctx=highlightCtx;
     const point=canvasClientPoint(depPreview,$('#tl-body'));
     const route=ScheduleBarGeometry.connector(bPos[depPreview.id],{type:'ms',cx:point.x,cy:point.y});
     ctx.beginPath();ctx.strokeStyle='#3370ff';ctx.lineWidth=2.2;ctx.setLineDash(route.kind==='adjacent-inline'?[]:[7,4]);
@@ -3836,6 +3870,25 @@ function capPNG(){
       ctx.restore();
     }
   }
+  // 普通依赖先绘制，让任务图形遮住穿过条体的线段；导出不保留交互高亮。
+  const vs=new Set(visible.map(v=>v.t.id));
+  ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
+  const pArrow=(fr,to,isC)=>{
+    const route=ScheduleBarGeometry.connector(fr,to);
+    ctx.beginPath();ctx.strokeStyle=isC?'#f53f3f':'#86909c';ctx.lineWidth=isC?2:1.3;
+    ctx.setLineDash(route.kind==='adjacent-inline'?[]:(isC?[7,3]:[5,5]));ctx.lineCap='round';ctx.lineJoin='round';
+    ScheduleBarGeometry.traceConnector(ctx,route,bx,oy);
+    ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.fillStyle=isC?'#f53f3f':'#86909c';
+    if(ScheduleBarGeometry.traceArrow(ctx,route,bx,oy))ctx.fill();
+  };
+  for(const{t}of visible){
+    if(!t.deps||!t.deps.length)continue;const to=bPos[t.id];if(!to)continue;
+    for(const dp of t.deps){if(!vs.has(dp))continue;const fr=bPos[dp];if(!fr)continue;
+      pArrow(fr,to,isCriticalDep(dp,t.id));
+    }
+  }
+  ctx.restore();
   // 图形与左表分开绘制：可见流程子父单也保留，不穿透关闭的展开层。
   ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
   for(const{t,p}of visible){
@@ -3916,25 +3969,6 @@ function capPNG(){
 
   }
   function oy0(p){return oy+p.y}
-  // 依赖连线
-  const vs=new Set(visible.map(v=>v.t.id));
-  ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
-  const pArrow=(fr,to,isC)=>{
-    const route=ScheduleBarGeometry.connector(fr,to);
-    ctx.beginPath();ctx.strokeStyle=isC?'#f53f3f':'#86909c';ctx.lineWidth=isC?2:1.3;
-    ctx.setLineDash(route.kind==='adjacent-inline'?[]:(isC?[7,3]:[5,5]));ctx.lineCap='round';ctx.lineJoin='round';
-    ScheduleBarGeometry.traceConnector(ctx,route,bx,oy);
-    ctx.stroke();ctx.setLineDash([]);
-    ctx.beginPath();ctx.fillStyle=isC?'#f53f3f':'#86909c';
-    if(ScheduleBarGeometry.traceArrow(ctx,route,bx,oy))ctx.fill();
-  };
-  for(const{t}of visible){
-    if(!t.deps||!t.deps.length)continue;const to=bPos[t.id];if(!to)continue;
-    for(const dp of t.deps){if(!vs.has(dp))continue;const fr=bPos[dp];if(!fr)continue;
-      pArrow(fr,to,isCriticalDep(dp,t.id));
-    }
-  }
-  ctx.restore();
   // 顶部图例与主体合成；检查 Blob 实际生成后才报告成功。
   const out=document.createElement('canvas');out.width=W*scale;out.height=(H+lgH)*scale;
   const c2=out.getContext('2d');
@@ -4343,9 +4377,9 @@ function hideGanttTooltip(){const tip=$('#tooltip');if(tip)tip.classList.remove(
 function clearGanttHover(){
   hideGanttTooltip();
   // A middle-pan or scrollbar gesture keeps lane geometry frozen until release.
-  if(typeof sbDrag!=='undefined'&&sbDrag)return;
-  document.querySelectorAll('.lane-exp.show').forEach(e=>e.classList.remove('show'));
-  document.querySelectorAll('.bar.ghosted').forEach(e=>e.classList.remove('ghosted'));
+  if((typeof sbDrag!=='undefined'&&sbDrag)||(typeof dragging!=='undefined'&&dragging))return;
+  // Re-render hover state through the layout model; selected chains may still
+  // require these same expansion layers after the pointer leaves the canvas.
   clearLaneHover();
 }
 
@@ -4994,7 +5028,8 @@ function bindWh(rt){
   function createController(env){
     const doc=env.document;
     let owner=null,selectedTaskId=null,tasksById=new Map(),owners=[],fingerprint=null,index=null,initialized=false;
-    let activeTrace=null,activeIds=new Set(),activeEdges=new Set(),controls=null,bound=false,press=null,dragged=false;
+    let activeTrace=null,activeIds=new Set(),activeEdges=new Set(),revealedParents=new Set(),controls=null,bound=false,press=null,dragged=false;
+    let layoutChanged=false,clickAnchor=null,doubleClickId=null;
     const traceCache=new Map();
     const taskSelector='#g-left-body .t-row[data-id],#b-layer [data-id],#b-layer [data-for]';
     const ownerOf=t=>typeof t.who==='string'?t.who.trim():'';
@@ -5024,6 +5059,15 @@ function bindWh(rt){
       activeTrace=selectedTaskId?getTrace(selectedTaskId):null;
       activeIds=new Set(activeTrace?activeTrace.taskIds:[]);
       activeEdges=new Set(activeTrace?activeTrace.edges.map(e=>edgeKey(e.from,e.to)):[]);
+      // Reveal the containers of every endpoint, without treating hierarchy as a dependency.
+      // This state is independent of hover and never changes saved fold/flow settings.
+      revealedParents=new Set();
+      for(const id of activeIds){
+        let parent=tasksById.get(id)?.pid;
+        while(parent&&tasksById.has(parent)&&!revealedParents.has(parent)){
+          revealedParents.add(parent);parent=tasksById.get(parent).pid;
+        }
+      }
     }
     function state(){
       ensure();
@@ -5055,11 +5099,15 @@ function bindWh(rt){
       owner=next;paint();return state();
     }
     function setSelected(value){
+      layoutChanged=false;
       ensure();let next=value==null||value===''?null:String(value);
       if(next&&!tasksById.has(next))throw new RangeError('任务不存在');
       if(next&&tasksById.get(next).type==='pipeline')next=null;
       if(selectedTaskId===next)return state();
-      selectedTaskId=next;refreshTrace();paint();redraw();return state();
+      const previousParents=[...revealedParents];
+      selectedTaskId=next;refreshTrace();paint();redraw();
+      if(env.revealTasks)layoutChanged=!!env.revealTasks(previousParents,[...revealedParents]);
+      return state();
     }
     function clear(){owner=null;setSelected(null);paint();return state()}
     function trace(id){
@@ -5089,9 +5137,22 @@ function bindWh(rt){
         const moved=dragged;dragged=false;
         if(event.defaultPrevented||(moved&&event.detail!==0)||(event.button!=null&&event.button!==0)||(env.isDragging&&env.isDragging()))return;
         const target=event.target;if(!target||!target.closest)return;
+        // Opening other containers can move the first click's bar before the
+        // second click. Keep the native double-click tied to that original task,
+        // rather than selecting another row or creating a task in the new gap.
+        if(env.editTask&&event.detail===2&&clickAnchor&&selectedTaskId===clickAnchor.id&&tasksById.has(clickAnchor.id)&&
+          Math.abs(event.clientX-clickAnchor.x)<4&&Math.abs(event.clientY-clickAnchor.y)<4&&target.closest('#g-left-body,#tl-body')){
+          doubleClickId=clickAnchor.id;event.preventDefault();event.stopPropagation();return;
+        }
+        clickAnchor=null;doubleClickId=null;
         const id=elementId(target);
-        if(id){setSelected(id);return}
+        if(id){setSelected(id);if(layoutChanged&&event.detail===1)clickAnchor={id,x:event.clientX,y:event.clientY};return}
         if(target.closest('#g-left-body,#tl-body,#selection-clear'))setSelected(null);
+      },true);
+      doc.addEventListener('dblclick',event=>{
+        const id=doubleClickId;doubleClickId=null;clickAnchor=null;
+        if(!id||!tasksById.has(id)||!env.editTask)return;
+        event.preventDefault();event.stopPropagation();env.editTask(id);
       },true);
       // Focus and arrow navigation retain the clicked chain. Space is an explicit keyboard activation;
       // Enter keeps the existing task-editor shortcut.
@@ -5131,14 +5192,17 @@ function bindWh(rt){
       // Keep the explicit choice across rendering, filtering and flow expansion.
       paint();if(selectedTaskId||previous)redraw();
     }
-    return{listOwners(){ensure();return owners.slice()},setOwner,clear,trace,setSelected,setHovered:setSelected,state,edgeState,afterRender};
+    return{listOwners(){ensure();return owners.slice()},setOwner,clear,trace,setSelected,setHovered:setSelected,state,edgeState,
+      revealsChildren(id){return revealedParents.has(id)},beforeRender:sync,afterRender};
   }
   if(typeof module==='object'&&module.exports){module.exports={buildIndex,traceIndex,createController};return}
   root.ScheduleHighlights=createController({
     document:root.document,window:root,getProject:()=>typeof proj==='undefined'?null:proj,
     buildGraph:tasks=>buildDependencyGraph(tasks),
     isDragging:()=>typeof dragging!=='undefined'&&dragging,
-    redrawEdges:()=>{if(typeof schDepDraw==='function')schDepDraw()}
+    redrawEdges:()=>{if(typeof schDepDraw==='function')schDepDraw()},
+    revealTasks:(before,after)=>typeof refreshHighlightLayout==='function'&&refreshHighlightLayout(before,after),
+    editTask:id=>{if(typeof sel==='function')sel(id);if(typeof edOpen==='function')edOpen(id)}
   });
 })(typeof window==='undefined'?globalThis:window);
 

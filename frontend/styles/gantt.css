@@ -226,7 +226,7 @@
   width: 20px; height: 20px; background: #b84f08; color: #fff;
   font-size: 12px; font-weight: 600;
 }
-.tl-body { position: relative; }
+.tl-body { position: relative; isolation: isolate; }
 .grid-col { position: absolute; top: 0; border-right: 1px solid #f4f5f6; pointer-events: none; }
 .grid-col.wk { background: var(--weekend); }
 .grid-col.heavy { border-right: 1px solid #dce1e6; }
@@ -252,8 +252,12 @@
 .bar.lane-sub .bar-name { font-weight: 500; }
 .bar.ghosted { opacity: .18; }
 .lane-tag { position: absolute; display: flex; align-items: center; z-index: 1; font-size: 11px; font-weight: 600; white-space: nowrap; pointer-events: none; }
-.dep-canvas { position: absolute; top: 0; left: 0; z-index: 2; overflow: visible; pointer-events: none; }
-.b-layer { position: absolute; top: 0; left: 0; z-index: 1; }
+/* Grid and group backgrounds < ordinary dependencies < tasks < selected chain.
+   Keep b-layer out of a stacking context so its grid cannot cover the low canvas. */
+.dep-canvas { position: absolute; top: 0; left: 0; z-index: 1; overflow: visible; pointer-events: none; }
+.dep-highlight-canvas { z-index: 4; }
+.b-layer { position: absolute; top: 0; left: 0; }
+.bar,.lane-band,.pipe-head,.lane-tag { z-index: 2; }
 
 /* Task bars — geometry matches the renderer's 22px height. */
 .bar {

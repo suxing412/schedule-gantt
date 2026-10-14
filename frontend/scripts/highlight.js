@@ -33,7 +33,8 @@
   function createController(env){
     const doc=env.document;
     let owner=null,selectedTaskId=null,tasksById=new Map(),owners=[],fingerprint=null,index=null,initialized=false;
-    let activeTrace=null,activeIds=new Set(),activeEdges=new Set(),controls=null,bound=false,press=null,dragged=false;
+    let activeTrace=null,activeIds=new Set(),activeEdges=new Set(),revealedParents=new Set(),controls=null,bound=false,press=null,dragged=false;
+    let layoutChanged=false,clickAnchor=null,doubleClickId=null;
     const traceCache=new Map();
     const taskSelector='#g-left-body .t-row[data-id],#b-layer [data-id],#b-layer [data-for]';
     const ownerOf=t=>typeof t.who==='string'?t.who.trim():'';
@@ -63,6 +64,15 @@
       activeTrace=selectedTaskId?getTrace(selectedTaskId):null;
       activeIds=new Set(activeTrace?activeTrace.taskIds:[]);
       activeEdges=new Set(activeTrace?activeTrace.edges.map(e=>edgeKey(e.from,e.to)):[]);
+      // Reveal the containers of every endpoint, without treating hierarchy as a dependency.
+      // This state is independent of hover and never changes saved fold/flow settings.
+      revealedParents=new Set();
+      for(const id of activeIds){
+        let parent=tasksById.get(id)?.pid;
+        while(parent&&tasksById.has(parent)&&!revealedParents.has(parent)){
+          revealedParents.add(parent);parent=tasksById.get(parent).pid;
+        }
+      }
     }
     function state(){
       ensure();
@@ -94,11 +104,15 @@
       owner=next;paint();return state();
     }
     function setSelected(value){
+      layoutChanged=false;
       ensure();let next=value==null||value===''?null:String(value);
       if(next&&!tasksById.has(next))throw new RangeError('任务不存在');
       if(next&&tasksById.get(next).type==='pipeline')next=null;
       if(selectedTaskId===next)return state();
-      selectedTaskId=next;refreshTrace();paint();redraw();return state();
+      const previousParents=[...revealedParents];
+      selectedTaskId=next;refreshTrace();paint();redraw();
+      if(env.revealTasks)layoutChanged=!!env.revealTasks(previousParents,[...revealedParents]);
+      return state();
     }
     function clear(){owner=null;setSelected(null);paint();return state()}
     function trace(id){
@@ -128,9 +142,22 @@
         const moved=dragged;dragged=false;
         if(event.defaultPrevented||(moved&&event.detail!==0)||(event.button!=null&&event.button!==0)||(env.isDragging&&env.isDragging()))return;
         const target=event.target;if(!target||!target.closest)return;
+        // Opening other containers can move the first click's bar before the
+        // second click. Keep the native double-click tied to that original task,
+        // rather than selecting another row or creating a task in the new gap.
+        if(env.editTask&&event.detail===2&&clickAnchor&&selectedTaskId===clickAnchor.id&&tasksById.has(clickAnchor.id)&&
+          Math.abs(event.clientX-clickAnchor.x)<4&&Math.abs(event.clientY-clickAnchor.y)<4&&target.closest('#g-left-body,#tl-body')){
+          doubleClickId=clickAnchor.id;event.preventDefault();event.stopPropagation();return;
+        }
+        clickAnchor=null;doubleClickId=null;
         const id=elementId(target);
-        if(id){setSelected(id);return}
+        if(id){setSelected(id);if(layoutChanged&&event.detail===1)clickAnchor={id,x:event.clientX,y:event.clientY};return}
         if(target.closest('#g-left-body,#tl-body,#selection-clear'))setSelected(null);
+      },true);
+      doc.addEventListener('dblclick',event=>{
+        const id=doubleClickId;doubleClickId=null;clickAnchor=null;
+        if(!id||!tasksById.has(id)||!env.editTask)return;
+        event.preventDefault();event.stopPropagation();env.editTask(id);
       },true);
       // Focus and arrow navigation retain the clicked chain. Space is an explicit keyboard activation;
       // Enter keeps the existing task-editor shortcut.
@@ -170,13 +197,16 @@
       // Keep the explicit choice across rendering, filtering and flow expansion.
       paint();if(selectedTaskId||previous)redraw();
     }
-    return{listOwners(){ensure();return owners.slice()},setOwner,clear,trace,setSelected,setHovered:setSelected,state,edgeState,afterRender};
+    return{listOwners(){ensure();return owners.slice()},setOwner,clear,trace,setSelected,setHovered:setSelected,state,edgeState,
+      revealsChildren(id){return revealedParents.has(id)},beforeRender:sync,afterRender};
   }
   if(typeof module==='object'&&module.exports){module.exports={buildIndex,traceIndex,createController};return}
   root.ScheduleHighlights=createController({
     document:root.document,window:root,getProject:()=>typeof proj==='undefined'?null:proj,
     buildGraph:tasks=>buildDependencyGraph(tasks),
     isDragging:()=>typeof dragging!=='undefined'&&dragging,
-    redrawEdges:()=>{if(typeof schDepDraw==='function')schDepDraw()}
+    redrawEdges:()=>{if(typeof schDepDraw==='function')schDepDraw()},
+    revealTasks:(before,after)=>typeof refreshHighlightLayout==='function'&&refreshHighlightLayout(before,after),
+    editTask:id=>{if(typeof sel==='function')sel(id);if(typeof edOpen==='function')edOpen(id)}
   });
 })(typeof window==='undefined'?globalThis:window);

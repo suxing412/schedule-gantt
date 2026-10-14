@@ -134,7 +134,7 @@ test('leaving the viewport during pan freezes expanded lanes until the gesture f
   const h=harness();h.start();assert.equal(h.hover.hidden,1);
   h.rt.fire('mouseleave');h.move(1100,300);h.rt.fire('scroll');
   assert.equal(h.hover.cleared,0);assert.equal(h.hover.classesRemoved,0);assert.equal(h.calls.extend,0);
-  h.end();assert.equal(h.hover.cleared,1);assert.equal(h.hover.classesRemoved,2);
+  h.end();assert.equal(h.hover.cleared,1);assert.equal(h.hover.classesRemoved,0);
   h.rt.fire('mouseleave');assert.equal(h.hover.cleared,2);
 });
 
@@ -143,4 +143,12 @@ test('pan cancels already pending lane-close timers without changing lane geomet
   h.laneCloseTimers.set('parent',h.context.setTimeout(()=>{closed++}));
   h.start();assert.equal(h.laneCloseTimers.size,0);h.flushTimers();assert.equal(closed,0);assert.equal(h.hover.cleared,0);
   h.move(430,340);assert.equal(h.hover.cleared,0);h.end();assert.equal(h.hover.cleared,1);
+});
+
+test('leaving the viewport during a task drag hides the tooltip without collapsing lanes',()=>{
+  const h=harness();h.run('dragging=true');
+  h.rt.fire('mouseleave');
+  assert.equal(h.hover.hidden,1);assert.equal(h.hover.cleared,0);assert.equal(h.hover.classesRemoved,0);
+  h.run('dragging=false');h.rt.fire('mouseleave');
+  assert.equal(h.hover.hidden,2);assert.equal(h.hover.cleared,1);assert.equal(h.hover.classesRemoved,0);
 });

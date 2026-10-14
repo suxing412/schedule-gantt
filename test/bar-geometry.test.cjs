@@ -128,7 +128,8 @@ function fixture(){
     ICON:{warn:'!'},desc:()=>[],taskBounds:()=>({mn:2,mx:2}),rowYs:[0],
     $:()=>layer};
   vm.createContext(sandbox);
-  vm.runInContext(code('render.js','function renderLane(','function laneItems(')+
+  vm.runInContext(code('render.js','function isLaneExpanded(','function refreshHighlightLayout(')+
+    code('render.js','function renderLane(','function laneItems(')+
     code('render.js','function rLaneSub(','/* 泳道内的节点：')+
     code('render.js','function rBar(','/* 标签自适应布局')+
     code('render.js','function rPipe(','/* 悬停信息浮层 */')+

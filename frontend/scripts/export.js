@@ -171,6 +171,25 @@ function capPNG(){
       ctx.restore();
     }
   }
+  // 普通依赖先绘制，让任务图形遮住穿过条体的线段；导出不保留交互高亮。
+  const vs=new Set(visible.map(v=>v.t.id));
+  ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
+  const pArrow=(fr,to,isC)=>{
+    const route=ScheduleBarGeometry.connector(fr,to);
+    ctx.beginPath();ctx.strokeStyle=isC?'#f53f3f':'#86909c';ctx.lineWidth=isC?2:1.3;
+    ctx.setLineDash(route.kind==='adjacent-inline'?[]:(isC?[7,3]:[5,5]));ctx.lineCap='round';ctx.lineJoin='round';
+    ScheduleBarGeometry.traceConnector(ctx,route,bx,oy);
+    ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.fillStyle=isC?'#f53f3f':'#86909c';
+    if(ScheduleBarGeometry.traceArrow(ctx,route,bx,oy))ctx.fill();
+  };
+  for(const{t}of visible){
+    if(!t.deps||!t.deps.length)continue;const to=bPos[t.id];if(!to)continue;
+    for(const dp of t.deps){if(!vs.has(dp))continue;const fr=bPos[dp];if(!fr)continue;
+      pArrow(fr,to,isCriticalDep(dp,t.id));
+    }
+  }
+  ctx.restore();
   // 图形与左表分开绘制：可见流程子父单也保留，不穿透关闭的展开层。
   ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
   for(const{t,p}of visible){
@@ -251,25 +270,6 @@ function capPNG(){
 
   }
   function oy0(p){return oy+p.y}
-  // 依赖连线
-  const vs=new Set(visible.map(v=>v.t.id));
-  ctx.save();ctx.beginPath();ctx.rect(ox,oy,axE.tw,H-oy);ctx.clip();
-  const pArrow=(fr,to,isC)=>{
-    const route=ScheduleBarGeometry.connector(fr,to);
-    ctx.beginPath();ctx.strokeStyle=isC?'#f53f3f':'#86909c';ctx.lineWidth=isC?2:1.3;
-    ctx.setLineDash(route.kind==='adjacent-inline'?[]:(isC?[7,3]:[5,5]));ctx.lineCap='round';ctx.lineJoin='round';
-    ScheduleBarGeometry.traceConnector(ctx,route,bx,oy);
-    ctx.stroke();ctx.setLineDash([]);
-    ctx.beginPath();ctx.fillStyle=isC?'#f53f3f':'#86909c';
-    if(ScheduleBarGeometry.traceArrow(ctx,route,bx,oy))ctx.fill();
-  };
-  for(const{t}of visible){
-    if(!t.deps||!t.deps.length)continue;const to=bPos[t.id];if(!to)continue;
-    for(const dp of t.deps){if(!vs.has(dp))continue;const fr=bPos[dp];if(!fr)continue;
-      pArrow(fr,to,isCriticalDep(dp,t.id));
-    }
-  }
-  ctx.restore();
   // 顶部图例与主体合成；检查 Blob 实际生成后才报告成功。
   const out=document.createElement('canvas');out.width=W*scale;out.height=(H+lgH)*scale;
   const c2=out.getContext('2d');

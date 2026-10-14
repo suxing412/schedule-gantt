@@ -52,7 +52,7 @@ function filteredTaskIds(){
 }
 function vRows(){
   const o=[],keep=filteredTaskIds();
-  const w=(pid,dp)=>{for(const t of kids(pid)){if(keep&&!keep.has(t.id))continue;o.push({t,depth:dp});if(isSum(t)&&(keep||!t.fold)&&!t.flow)w(t.id,dp+1)}};
+  const w=(pid,dp)=>{for(const t of kids(pid)){if(keep&&!keep.has(t.id))continue;o.push({t,depth:dp});if(isSum(t)&&(keep||!t.fold||(typeof ScheduleHighlights!=='undefined'&&ScheduleHighlights.revealsChildren?.(t.id)))&&!t.flow)w(t.id,dp+1)}};
   w(null,0);return o;
 }
 

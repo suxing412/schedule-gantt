@@ -2,9 +2,9 @@ function hideGanttTooltip(){const tip=$('#tooltip');if(tip)tip.classList.remove(
 function clearGanttHover(){
   hideGanttTooltip();
   // A middle-pan or scrollbar gesture keeps lane geometry frozen until release.
-  if(typeof sbDrag!=='undefined'&&sbDrag)return;
-  document.querySelectorAll('.lane-exp.show').forEach(e=>e.classList.remove('show'));
-  document.querySelectorAll('.bar.ghosted').forEach(e=>e.classList.remove('ghosted'));
+  if((typeof sbDrag!=='undefined'&&sbDrag)||(typeof dragging!=='undefined'&&dragging))return;
+  // Re-render hover state through the layout model; selected chains may still
+  // require these same expansion layers after the pointer leaves the canvas.
   clearLaneHover();
 }
 
